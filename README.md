@@ -3,4 +3,4 @@ Developed by the University of Peloponnese for the Synergies project, this strea
 
 - Docker support
 - Remote access
-- 
+- Naming Conventions
