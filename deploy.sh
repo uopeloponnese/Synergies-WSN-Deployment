@@ -25,7 +25,30 @@ chmod +x perform_operational_checks.sh
 
 # Execute the separate scripts for each task
 ./install_dependencies.sh
-./establish_vpn_connection.sh $site_id $vpn_ip $vpn_port $vpn_password
+
+# Check if OpenVPN connection is up
+#if sudo systemctl is-active --quiet openvpn@client.service >/dev/null; then
+if ip link show tun0 >/dev/null 2>&1; then
+    echo "VPN connection is already UP"
+    # Continue with the rest of the script
+else
+    # Establish VPN connection
+    ./establish_vpn_connection.sh $site_id $vpn_ip $vpn_port $vpn_password
+fi
+
+
+# Check the exit code of the script
+if [ $? -eq 0 ]; then
+    echo "VPN tunnel is up. Proceeding with deployment..."
+    # Continue with the rest of the deployment steps
+else
+    echo "Error: VPN connection is DOWN. Check your credentials."
+    echo "Deployment cannot proceed."
+    echo "Exiting..."
+    # Add error handling code or exit the script if necessary
+    exit 1
+fi
+
 ./deploy_openhab.sh $site_id
 ./perform_operational_checks.sh
 
