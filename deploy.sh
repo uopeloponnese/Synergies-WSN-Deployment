@@ -23,7 +23,7 @@ chmod +x deploy_openhab.sh
 chmod +x perform_operational_checks.sh
 
 # Execute the separate scripts for each task
-./install_prerequisites.sh
+./install_dependencies.sh
 ./establish_vpn_connection.sh $vpn_ip $site_id $vpn_password
 ./deploy_openhab.sh $site_id
 ./perform_operational_checks.sh
