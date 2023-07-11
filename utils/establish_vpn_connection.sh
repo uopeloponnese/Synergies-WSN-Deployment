@@ -131,7 +131,8 @@ echo "Establishing remote connection..."
 sleep 15
 
 # Check if OpenVPN connection is up
-if sudo systemctl is-active --quiet openvpn@client.service >/dev/null; then
+#if sudo systemctl is-active --quiet openvpn@client.service >/dev/null; then
+if ip link show tun0 >/dev/null 2>&1; then
     echo "OpenVPN connection is up"
     echo "OpenVPN client setup completed!"
     # Continue with the rest of the script
