@@ -133,13 +133,10 @@ sleep 15
 # Check if OpenVPN connection is up
 #if sudo systemctl is-active --quiet openvpn@client.service >/dev/null; then
 if ip link show tun0 >/dev/null 2>&1; then
-    echo "OpenVPN connection is up"
-    echo "OpenVPN client setup completed!"
+    echo "VPN connection is UP"
     # Continue with the rest of the script
     # ...
 else
-    echo "OpenVPN connection is not up"
-    echo "Check your credentials"
-    # Handle the case when the connection is not up
-    # ...
+    echo "VPN connection is DOWN"
+    exit 1  # Exit the script with a non-zero status code
 fi
