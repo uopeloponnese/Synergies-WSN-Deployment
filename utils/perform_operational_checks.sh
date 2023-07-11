@@ -1,0 +1,1 @@
+echo "Performing operational checks..."
