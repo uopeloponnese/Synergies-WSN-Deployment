@@ -17,7 +17,7 @@ vpn_password=$3
 
 # Change to the utils directory
 cd utils
-chmod +x install_prerequisites.sh
+chmod +x install_dependencies.sh
 chmod +x establish_vpn_connection.sh
 chmod +x deploy_openhab.sh
 chmod +x perform_operational_checks.sh
