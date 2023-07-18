@@ -5,6 +5,7 @@
 # Main script starts here
 
 # Change to the utils directory
+# shellcheck disable=SC2164
 cd utils
 
 ./deploy_openhab.sh 0
