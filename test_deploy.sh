@@ -4,6 +4,8 @@
 
 # Main script starts here
 
+# Change to the utils directory
+cd utils
 
 ./deploy_openhab.sh 0
 ./perform_operational_checks.sh
