@@ -6,7 +6,7 @@ sudo docker-compose --env-file ../docker.env up -d
 # Wait for OpenHAB to start
 while true; do
     status=$(sudo docker exec -it openhab /openhab/runtime/bin/status)
-    if echo "$status" | grep -q "Running ..."; then
+    if [[ ("$status" == *"Running ..."*) && ("$status" != *"Not Running ..."*)]]; then
         echo "OpenHAB is running."
         break
     else
