@@ -1,3 +1,3 @@
 echo "Setting up openHAB..."
 
-docker-compose --env-file .env up
+sudo docker-compose --env-file .env up
