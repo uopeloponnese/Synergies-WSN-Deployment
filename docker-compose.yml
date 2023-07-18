@@ -4,6 +4,9 @@ services:
   openhab:
     image: openhab/openhab:latest
     container_name: openhab
+    ports:
+      -  ${OPENHAB_HTTP_PORT}:${OPENHAB_HTTP_PORT}
+      -  ${OPENHAB_HTTPS_PORT}:${OPENHAB_HTTPS_PORT}
     depends_on:
       - influxdb
     restart: always
@@ -19,11 +22,9 @@ services:
       OPENHAB_HTTP_PORT: ${OPENHAB_HTTP_PORT}
       OPENHAB_HTTPS_PORT: ${OPENHAB_HTTPS_PORT}
       CRYPTO_POLICY: "unlimited"
-      EXTRA_JAVA_OPTS: "-Duser.timezone=${TZ}"
+      # EXTRA_JAVA_OPTS: "-Duser.timezone=${TZ}"
       USER_ID: 999
       GROUP_ID: 994
-      # Test to run openHAB with German number format
-      # Can be tested by entering "locale" after "docker exec -t -i openhab /bin/bash"
       LANG: en_US.UTF-8
       LANGUAGE: en_US.UTF-8
       LC_ALL: en_US.UTF-8
