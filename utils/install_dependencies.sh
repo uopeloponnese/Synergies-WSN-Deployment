@@ -5,6 +5,10 @@ echo "Installing dependencies..."
 sudo apt-get update
 sudo apt-get -y upgrade
 
+##### expect #####
+# this is for executing commands into the openhab console
+sudo apt-get install expect -y
+
 ##### OVPN #####
 sudo apt-get install openvpn -y
 
