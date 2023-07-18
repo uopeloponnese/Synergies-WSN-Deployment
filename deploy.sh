@@ -17,7 +17,7 @@ vpn_port=$3
 vpn_password=$4
 
 # Change to the utils directory
-cd utils
+cd utils || { echo "Error - No utils folder"; exit 1; }
 chmod +x install_dependencies.sh
 chmod +x establish_vpn_connection.sh
 chmod +x deploy_openhab.sh
