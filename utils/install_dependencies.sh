@@ -51,8 +51,9 @@ else
 fi
 
 ##### Docker-Compose #####
-sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+sudo apt update
+sudo apt install -y python3-pip libffi-dev
+sudo pip3 install docker-compose
 
 # Check if Docker Compose is installed
 if ! command -v docker-compose &>/dev/null; then
