@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  openhab:
+    image: openhab/openhab:latest
+    container_name: openhab
+    depends_on:
+      - influxdb
+    restart: always
+    privileged: true
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - data_openhab_conf:/openhab/conf
+      - data_openhab_addons:/openhab/addons
+      - data_openhab_userdata:/openhab/userdata
+    environment:
+      TZ: ${TZ}
+      OPENHAB_HTTP_PORT: ${OPENHAB_HTTP_PORT}
+      OPENHAB_HTTPS_PORT: ${OPENHAB_HTTPS_PORT}
+      CRYPTO_POLICY: "unlimited"
+      EXTRA_JAVA_OPTS: "-Duser.timezone=${TZ}"
+      USER_ID: 999
+      GROUP_ID: 994
+      # Test to run openHAB with German number format
+      # Can be tested by entering "locale" after "docker exec -t -i openhab /bin/bash"
+      LANG: en_US.UTF-8
+      LANGUAGE: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    networks:
+      wsn-bridge:
+        aliases:
+        - oh
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    restart: always
+    volumes:
+      - data_influxdb:/var/lib/influxdb
+      - data_influxdb_config:/etc/influxdb
+    ports:
+      - ${INFLUXDB_DB_PORT}:8086
+    environment:
+      - INFLUXDB_DATA_ENGINE=tsm1
+      - INFLUXDB_REPORTING_DISABLED=false
+      - INFLUXDB_ADMIN_USER=${INFLUXDB_ADMIN_USER}
+      - INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_ADMIN_PASSWORD}
+      - INFLUXDB_USER=${INFLUXDB_USER}
+      - INFLUXDB_USER_PASSWORD=${INFLUXDB_USER_PASSWORD}
+      - INFLUXDB_READ_USER=${INFLUXDB_READ_USER}
+      - INFLUXDB_READ_USER_PASSWORD=${INFLUXDB_READ_USER_PASSWORD}
+      - INFLUXDB_DB=${INFLUXDB_OPENHAB_DB}
+      - TZ=${TZ}
+    networks:
+      wsn-bridge:
+        aliases:
+        - db
+
+volumes:
+  data_openhab_conf:
+  data_openhab_addons:
+  data_openhab_userdata:
+  data_influxdb:
+  data_influxdb_config:
+
+networks:
+  wsn-bridge:
+    driver: bridge
