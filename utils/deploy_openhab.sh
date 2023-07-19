@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Source the config.env file to load the variables
+source config.env
+
 echo "Setting up openHAB..."
 
 # Check if Z-Wave controller is connected and /dev/ttyACM0 is available
@@ -32,7 +36,7 @@ while true; do
         break
     else
         echo "OpenHAB is not running yet. Waiting..."
-        sleep 5
+        sleep 30
     fi
 done
 
@@ -40,3 +44,6 @@ done
 # ...
 echo "openHAB started!"
 echo "Continuing..."
+echo "Congratulations! The openHAB deployment is complete."
+echo "You can now access the openHAB user interface by visiting the following URL:"
+echo "http://$HOSTNAME:$OPENHAB_HTTP_PORT"
