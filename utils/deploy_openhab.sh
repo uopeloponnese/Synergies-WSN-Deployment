@@ -36,7 +36,7 @@ while true; do
         break
     else
         echo "OpenHAB is not running yet. Waiting..."
-        sleep 30
+        sleep 5
     fi
 done
 
@@ -45,5 +45,21 @@ done
 echo "openHAB started!"
 echo "Continuing..."
 echo "Congratulations! The openHAB deployment is complete."
+
+URL="http://$WSN_HOSTNAME:$OPENHAB_HTTP_PORT"
+
+while true; do
+  response=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+
+  if [[ $response -eq 200 ]]; then
+    echo "The URL is accessible."
+    break
+  else
+    echo "The URL is not accessible yet. Waiting..."
+  fi
+
+  sleep 5  # Wait for 5 seconds before checking again
+done
+
 echo "You can now access the openHAB user interface by visiting the following URL:"
-echo "http://$WSN_HOSTNAME:$OPENHAB_HTTP_PORT"
+echo "$URL"
