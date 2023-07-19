@@ -15,6 +15,7 @@ do
     break
   fi
 
+  # shellcheck disable=SC2162
   read -p ""
 done
 
