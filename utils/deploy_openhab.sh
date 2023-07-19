@@ -26,7 +26,7 @@ done
 echo "Continue with the rest of the deployment process ..."
 
 # Running docker compose
-sudo docker-compose --env-file ../docker.env up -d
+sudo docker-compose --env-file ../config.env up -d
 
 # Wait for OpenHAB to start
 while true; do
