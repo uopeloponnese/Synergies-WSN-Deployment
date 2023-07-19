@@ -40,6 +40,14 @@ while true; do
     fi
 done
 
+# Enable console
+sudo docker exec openhab sed -i 's/^#org.apache.karaf.shell:sshHost = 0.0.0.0/org.apache.karaf.shell:sshHost = 0.0.0.0/' /openhab/conf/services/runtime.cfg
+echo "openHAB console enabled."
+
+sudo docker restart openhab
+echo "openHAB is restarting..."
+
+
 # Continue with the rest of your deployment steps
 # ...
 echo "openHAB started!"
