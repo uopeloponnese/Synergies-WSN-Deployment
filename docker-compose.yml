@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   openhab:
-    image: openhab/openhab:latest
+    image: openhab/openhab:3.4.4
     container_name: openhab
     ports:
       -  ${OPENHAB_HTTP_PORT}:${OPENHAB_HTTP_PORT}
