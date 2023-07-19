@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source the config.env file to load the variables
-source config.env
+source ../config.env
 
 echo "Setting up openHAB..."
 
@@ -46,4 +46,4 @@ echo "openHAB started!"
 echo "Continuing..."
 echo "Congratulations! The openHAB deployment is complete."
 echo "You can now access the openHAB user interface by visiting the following URL:"
-echo "http://$HOSTNAME:$OPENHAB_HTTP_PORT"
+echo "http://$WSN_HOSTNAME:$OPENHAB_HTTP_PORT"
