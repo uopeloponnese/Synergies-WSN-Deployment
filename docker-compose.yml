@@ -18,6 +18,7 @@ services:
       - data_openhab_conf:/openhab/conf
       - data_openhab_addons:/openhab/addons
       - data_openhab_userdata:/openhab/userdata
+      - configs/openhab_addons.cfg:/openhab/conf/services/addons.cfg
     environment:
       TZ: ${TZ}
       OPENHAB_HTTP_PORT: ${OPENHAB_HTTP_PORT}
