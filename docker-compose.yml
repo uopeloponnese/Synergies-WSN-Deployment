@@ -19,7 +19,8 @@ services:
       - data_openhab_addons:/openhab/addons
       - data_openhab_userdata:/openhab/userdata
       - ./configs/openhab_addons.cfg:/openhab/conf/services/addons.cfg
-      - ./configs/org.openhab.binding.zwave-3.4.2_MODIFIED.jar:/openhab/org.openhab.binding.zwave-3.4.2_MODIFIED.jar
+#      - ./configs/org.openhab.binding.zwave-3.4.2_MODIFIED.jar:/openhab/org.openhab.binding.zwave-3.4.2_MODIFIED.jar
+      - ./openhab_services:/openhab/conf/services
     environment:
       TZ: ${TZ}
       OPENHAB_HTTP_PORT: ${OPENHAB_HTTP_PORT}
