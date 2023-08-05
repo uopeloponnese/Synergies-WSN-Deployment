@@ -16,6 +16,9 @@ vpn_ip=$2
 vpn_port=$3
 vpn_password=$4
 
+# Create the ID file with the site_id
+echo "$1" > ID
+
 # Change to the utils directory
 cd utils || { echo "Error - No utils folder"; exit 1; }
 chmod +x install_dependencies.sh
