@@ -69,5 +69,9 @@ while true; do
   sleep 5  # Wait for 5 seconds before checking again
 done
 
+# Add openhab user
+echo "Adding openhab user"
+./console_command.sh "openhab:users add openhab openhab administrator"
+
 echo "You can now access the openHAB user interface by visiting the following URL:"
 echo "$URL"
