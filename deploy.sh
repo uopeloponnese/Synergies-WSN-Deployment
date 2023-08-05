@@ -22,6 +22,7 @@ chmod +x install_dependencies.sh
 chmod +x establish_vpn_connection.sh
 chmod +x deploy_openhab.sh
 chmod +x perform_operational_checks.sh
+chmod +x console_command.sh
 
 # Execute the separate scripts for each task
 ./install_dependencies.sh
