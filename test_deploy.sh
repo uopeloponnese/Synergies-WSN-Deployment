@@ -7,6 +7,10 @@
 # Change to the utils directory
 cd utils || { echo "Error - No utils folder"; exit 1; }
 
+chmod +x console_command.sh
+chmod +x deploy_openhab.sh
+chmod +x perform_operational_checks.sh
+
 ./deploy_openhab.sh 0
 ./perform_operational_checks.sh
 
