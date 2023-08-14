@@ -68,7 +68,7 @@ services:
 ###################### DEBUGGING ######################
 
   chronograf:
-    image: influxdata/chronograf:latest
+    image: chronograf:1.5
     container_name: chronograf
     ports:
       - 8888:8888
