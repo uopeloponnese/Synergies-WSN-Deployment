@@ -65,6 +65,24 @@ services:
         aliases:
         - db
 
+###################### DEBUGGING ######################
+
+  chronograf:
+    image: influxdata/chronograf:latest
+    container_name: chronograf
+    ports:
+      - 8888:8888
+    environment:
+      CHRONOGRAF_INFLUXDB_URLS: http://db:8086
+    depends_on:
+      - influxdb
+    networks:
+      wsn-bridge:
+        aliases:
+        - chronograf
+
+#######################################################
+
 volumes:
   data_openhab_conf:
   data_openhab_addons:
