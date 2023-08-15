@@ -21,6 +21,7 @@ services:
 #      - ./configs/openhab_addons.cfg:/openhab/conf/services/addons.cfg
       - ./configs/org.openhab.binding.zwave-3.4.2_MODIFIED.jar:/openhab/org.openhab.binding.zwave-3.4.2_MODIFIED.jar
       - ./configs/influxdb.persist:/openhab/conf/persistence/influxdb.persist
+      - ./configs/users.json:/openhab/userdata/jsondb/users.json
       - ./openhab_services:/openhab/conf/services
     environment:
       TZ: ${TZ}
