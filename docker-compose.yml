@@ -65,6 +65,19 @@ services:
         aliases:
         - db
 
+  data-app:
+    build:
+      context: .
+      dockerfile: data_app/Dockerfile
+    container_name: app
+    restart: always
+    ports:
+      - 5000:5000  # Expose container port 5000 to host port 5000
+    networks:
+      wsn-bridge:
+        aliases:
+          - app
+
 ###################### DEBUGGING ######################
 
   chronograf:
