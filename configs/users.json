@@ -1,0 +1,15 @@
+{
+  "openhab": {
+    "class": "org.openhab.core.auth.ManagedUser",
+    "value": {
+      "name": "openhab",
+      "passwordHash": "39yQpa0AT5dWzFnFicoh3Ii8GJnzNc7UIGlFxB5Oh3nvm5HafczgsKaGPMAd+9uiA7pdEvVfqs+j+oGRGBV1jg\u003d\u003d",
+      "passwordSalt": "bAkpl+PQUnV2qFIaWd2MR0qxi3FaFBeF4xmGDbFNEM0XLnmJOCN+zrjxW8/K04s3G13v8xc55+Av2mvKVppbtQ\u003d\u003d",
+      "roles": [
+        "administrator"
+      ],
+      "sessions": [],
+      "apiTokens": []
+    }
+  }
+}
