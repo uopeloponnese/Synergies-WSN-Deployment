@@ -5,7 +5,6 @@ from flask import jsonify, send_from_directory
 
 class Greet(Resource):
     @staticmethod
-    def get():
-        a = request
-        return {'message': 'Hello, how are you?'}
+    def get(self):
+        return {'message': 'Hello, welcome to the greet endpoint!'}
 
