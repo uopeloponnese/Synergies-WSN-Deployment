@@ -14,7 +14,8 @@ def output_json(data, code=None, headers=None):
 
 
 # endpoints
-api.add_resource(rest.Greet, '/greet', resource_class_kwargs={'representations': {'application/json': output_json}})
+# api.add_resource(rest.Greet, '/greet', resource_class_kwargs={'representations': {'application/json': output_json}})
+api.add_resource(rest.Greet)
 
 if __name__ == "__main__":
     # ekkinisi tou server se ola ta interfaces tou, me default port tin 5000
