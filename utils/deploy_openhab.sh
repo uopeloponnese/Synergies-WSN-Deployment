@@ -28,13 +28,13 @@ echo "Continue with the rest of the deployment process ..."
 # Running docker compose
 sudo docker-compose --env-file ../config.env up --build -d
 
-echo -n "OpenHAB is not running yet. Waiting"
+echo -n "openHAB is not running yet. Waiting"
 # Wait for OpenHAB to start
 while true; do
     status=$(sudo docker exec -it openhab /openhab/runtime/bin/status)
     if [[ ("$status" == *"Running ..."*) && ("$status" != *"Not Running ..."*)]]; then
         echo ""
-        echo "OpenHAB is running."
+        echo "openHAB is running."
         break
     else
         echo -n "."
@@ -43,7 +43,6 @@ while true; do
 done
 
 # Continue with the rest of your deployment steps
-echo "openHAB started!"
 echo ""
 
 URL="http://$WSN_HOSTNAME:$OPENHAB_HTTP_PORT"
