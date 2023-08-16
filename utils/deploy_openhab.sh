@@ -47,13 +47,13 @@ echo ""
 
 URL="http://$WSN_HOSTNAME:$OPENHAB_HTTP_PORT"
 
-echo -n "The URL is not accessible yet. Waiting"
+echo -n "The openHAB URL is not accessible yet. Waiting"
 while true; do
   response=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
 
   if [[ $response -eq 200 ]]; then
     echo ""
-    echo "The URL is accessible."
+    echo "The openHAB URL is accessible."
     break
   else
     echo -n "."
