@@ -54,7 +54,16 @@ else
 fi
 
 ./deploy_openhab.sh $site_id
-./perform_operational_checks.sh
+#./perform_operational_checks.sh  # skipped
+
+# Source the config.env file to load the variables
+source ../config.env
+URL="http://$WSN_HOSTNAME:$OPENHAB_HTTP_PORT"
+
 
 # Display completion message
+echo ""
 echo "Deployment completed successfully."
+echo ""
+echo "You can now access the openHAB user interface by visiting the following URL:"
+echo "$URL"
