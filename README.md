@@ -3,6 +3,6 @@ Developed by the University of Peloponnese for the Synergies project, this strea
 
 
 ### WSN Architecture
-The WSN architecture forms the foundation of the Wireless Sensor Network solution, providing a robust and scalable framework for data collection, analysis, and management. This section provides an overview of the key components that constitute the WSN architecture, highlighting their roles and interactions within the system.
+The WSN architecture forms the foundation of the Wireless Sensor Network solution, providing a robust and scalable framework for data collection, analysis, and management. The following image shows the high-level architecture of the WSN.
 
 ![WSN Architecture](misc/wsn.png?raw=true "WSN Architecture")
