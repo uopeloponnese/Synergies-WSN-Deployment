@@ -40,16 +40,7 @@ while true; do
     fi
 done
 
-## Enable console - No need for manual enabling after mounting /openhab/conf/services
-#sudo docker exec openhab sed -i 's/^#org.apache.karaf.shell:sshHost = 0.0.0.0/org.apache.karaf.shell:sshHost = 0.0.0.0/' /openhab/conf/services/runtime.cfg
-#echo "openHAB console enabled."
-#
-#sudo docker restart openhab
-#echo "openHAB is restarting..."
-
-
 # Continue with the rest of your deployment steps
-# ...
 echo "openHAB started!"
 echo "Continuing..."
 echo "Congratulations! The openHAB deployment is complete."
@@ -63,7 +54,12 @@ while true; do
     echo "The URL is accessible."
     break
   else
-    echo "The URL is not accessible yet. Waiting..."
+    echo -n "The URL is not accessible yet. Waiting"
+    for (( i = 0; i < 3; i++ )); do
+      echo -n "."
+      sleep 1
+    done
+    echo ""
   fi
 
   sleep 5  # Wait for 5 seconds before checking again
@@ -72,6 +68,3 @@ done
 ## Add openhab user - skipped. added user from configs/users.json -> mounted
 #echo "Adding openhab user"
 #./console_command.sh "openhab:users add openhab openhab administrator"
-
-echo "You can now access the openHAB user interface by visiting the following URL:"
-echo "$URL"
