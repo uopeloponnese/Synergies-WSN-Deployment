@@ -28,6 +28,7 @@ echo "Continue with the rest of the deployment process ..."
 # Running docker compose
 sudo docker-compose --env-file ../config.env up --build -d
 
+echo "OpenHAB is not running yet. Waiting"
 # Wait for OpenHAB to start
 while true; do
     status=$(sudo docker exec -it openhab /openhab/runtime/bin/status)
@@ -35,9 +36,9 @@ while true; do
         echo "OpenHAB is running."
         break
     else
-        echo "OpenHAB is not running yet. Waiting..."
-        sleep 5
+        echo -n "."
     fi
+    sleep 3  # Wait for 3 seconds before checking again
 done
 
 # Continue with the rest of your deployment steps
@@ -47,6 +48,7 @@ echo "Congratulations! The openHAB deployment is complete."
 
 URL="http://$WSN_HOSTNAME:$OPENHAB_HTTP_PORT"
 
+echo -e "The URL is not accessible yet. Waiting"
 while true; do
   response=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
 
@@ -54,15 +56,9 @@ while true; do
     echo "The URL is accessible."
     break
   else
-    echo -n "The URL is not accessible yet. Waiting"
-    for (( i = 0; i < 3; i++ )); do
-      echo -n "."
-      sleep 1
-    done
-    echo ""
+    echo -n "."
   fi
-
-  sleep 5  # Wait for 5 seconds before checking again
+  sleep 3  # Wait for 3 seconds before checking again
 done
 
 ## Add openhab user - skipped. added user from configs/users.json -> mounted
