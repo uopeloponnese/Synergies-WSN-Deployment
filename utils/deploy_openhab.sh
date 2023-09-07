@@ -5,15 +5,15 @@ source ../config.env
 
 echo "Setting up openHAB..."
 
-# Check if Z-Wave controller is connected and /dev/ttyACM0 is available
+# Check if Z-Wave controller is connected and /dev/ttyACM0 (or /dev/ttyUSB0 for Z-Stick 7) is available
 while true
 do
-  if ! lsusb | grep -q "Aeotec"; then
-    echo "Z-Wave controller not detected. Please connect the Aeotec Z-Stick Gen5+ Z-Wave controller and press Enter to continue ..."
+  if ! lsusb | grep -q "$Z_STICK_MANUFACTURER"; then
+    echo "Z-Wave controller not detected. Please connect the $Z_STICK_NAME controller and press Enter to continue ..."
   else
     echo "Z-Wave controller connected."
-    if [ ! -e /dev/ttyACM0 ]; then
-      echo "/dev/ttyACM0 device not found. Please contact the UoP WSN Technical Consultant."
+    if [ ! -e "$Z_STICK_PORT" ]; then
+      echo "$Z_STICK_PORT device not found. Please contact the UoP WSN Technical Consultant."
       exit 1
     fi
     break
