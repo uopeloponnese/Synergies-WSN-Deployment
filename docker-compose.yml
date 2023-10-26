@@ -126,6 +126,7 @@ volumes:
   data_openhab_userdata:
   data_influxdb:
   data_influxdb_config:
+  grafana_data:
 
 networks:
   wsn-bridge:
