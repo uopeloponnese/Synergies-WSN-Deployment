@@ -73,7 +73,11 @@ services:
     container_name: grafana
     restart: always
     ports:
-      - 3000:3000  # Expose Grafana on port 3000
+      - "3000:3000"
+    links:
+      - influxdb
+    volumes:
+      - grafana_data:/var/lib/grafana
     environment:
       GF_SECURITY_ADMIN_USER: admin  # Set your Grafana admin username
       GF_SECURITY_ADMIN_PASSWORD: adminpassword  # Set your Grafana admin password
