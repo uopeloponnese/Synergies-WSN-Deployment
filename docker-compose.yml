@@ -69,8 +69,7 @@ services:
         - db
 
   grafana:
-#    image: grafana/grafana:8.4.3-armv7:latest
-    image: grafana/grafana:latest
+    image: grafana/grafana:8.4.3-arm64:latest
     container_name: grafana
     restart: always
     ports:
