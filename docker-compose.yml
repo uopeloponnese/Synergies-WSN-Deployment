@@ -7,7 +7,7 @@ services:
     ports:
       -  ${OPENHAB_HTTP_PORT}:${OPENHAB_HTTP_PORT}
       -  ${OPENHAB_HTTPS_PORT}:${OPENHAB_HTTPS_PORT}
-      -  ${OPENHAB_CONSOLE_PORT}:${OPENHAB_CONSOLE_PORT}  # na to vgalo!!!!!!!!!!!!!!!!!!!!!
+      -  ${OPENHAB_CONSOLE_PORT}:${OPENHAB_CONSOLE_PORT}
     depends_on:
       - influxdb
     restart: always
@@ -18,7 +18,7 @@ services:
       - data_openhab_conf:/openhab/conf
       - data_openhab_addons:/openhab/addons
       - data_openhab_userdata:/openhab/userdata
-#      - ./configs/openhab_addons.cfg:/openhab/conf/services/addons.cfg
+      - ./configs/openhab_addons.cfg:/openhab/conf/services/addons.cfg
       - ./configs/org.openhab.binding.zwave-3.4.2_MODIFIED.jar:/openhab/org.openhab.binding.zwave-3.4.2_MODIFIED.jar
       - ./configs/influxdb.persist:/openhab/conf/persistence/influxdb.persist
       - ./configs/users.json:/openhab/userdata/jsondb/users.json
@@ -28,7 +28,7 @@ services:
       OPENHAB_HTTP_PORT: ${OPENHAB_HTTP_PORT}
       OPENHAB_HTTPS_PORT: ${OPENHAB_HTTPS_PORT}
       CRYPTO_POLICY: "unlimited"
-      # EXTRA_JAVA_OPTS: "-Duser.timezone=${TZ}"
+      EXTRA_JAVA_OPTS: "-Duser.timezone=${TZ}"
       USER_ID: 999
       GROUP_ID: 994
       LANG: en_US.UTF-8
@@ -73,29 +73,11 @@ services:
     container_name: app
     restart: always
     ports:
-      - 5000:5000  # Expose container port 5000 to host port 5000
+      - 5000:5000
     networks:
       wsn-bridge:
         aliases:
           - app
-
-###################### DEBUGGING ######################
-
-  chronograf:
-    image: chronograf:1.5
-    container_name: chronograf
-    ports:
-      - 8888:8888
-    environment:
-      CHRONOGRAF_INFLUXDB_URLS: http://db:8086
-    depends_on:
-      - influxdb
-    networks:
-      wsn-bridge:
-        aliases:
-        - chronograf
-
-#######################################################
 
 volumes:
   data_openhab_conf:
