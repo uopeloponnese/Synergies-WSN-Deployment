@@ -5,9 +5,9 @@ services:
     image: openhab/openhab:3.4.4
     container_name: openhab
     ports:
-      -  ${OPENHAB_HTTP_PORT}:${OPENHAB_HTTP_PORT}
-      -  ${OPENHAB_HTTPS_PORT}:${OPENHAB_HTTPS_PORT}
-      -  ${OPENHAB_CONSOLE_PORT}:${OPENHAB_CONSOLE_PORT}
+      - ${OPENHAB_HTTP_PORT}:${OPENHAB_HTTP_PORT}
+      - ${OPENHAB_HTTPS_PORT}:${OPENHAB_HTTPS_PORT}
+      - ${OPENHAB_CONSOLE_PORT}:${OPENHAB_CONSOLE_PORT}
     depends_on:
       - influxdb
     restart: always
