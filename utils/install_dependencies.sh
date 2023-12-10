@@ -3,14 +3,15 @@ echo "Installing dependencies..."
 
 # Update repositories
 sudo apt-get update
-sudo apt-get -y upgrade
+# sudo apt-get -y upgrade
 
 ##### expect #####
 # this is for executing commands into the openhab console
 sudo apt-get install expect -y
 
 ##### OVPN #####
-sudo apt-get install openvpn -y
+#sudo apt-get install openvpn -y
+sudo apt-get install openvpn=2.5.1-3 -y
 
 # Check if OpenVPN is installed
 if ! command -v openvpn &>/dev/null; then
