@@ -81,7 +81,7 @@ else
 fi
 
 # Uninstall the existing Docker Python package
-sudo pip3 uninstall docker
+sudo pip3 uninstall docker -y
 
 # Install Docker Python package version 6.1.3
-sudo pip3 install docker==6.1.3
+sudo pip3 install docker==6.1.3 -y
