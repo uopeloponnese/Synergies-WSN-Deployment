@@ -79,3 +79,9 @@ if ! command -v docker-compose &>/dev/null; then
 else
     echo "Docker Compose installation successful. Version: $(docker-compose --version)"
 fi
+
+# Uninstall the existing Docker Python package
+sudo pip3 uninstall docker
+
+# Install Docker Python package version 6.1.3
+sudo pip3 install docker==6.1.3
