@@ -28,7 +28,7 @@ services:
       OPENHAB_HTTP_PORT: ${OPENHAB_HTTP_PORT}
       OPENHAB_HTTPS_PORT: ${OPENHAB_HTTPS_PORT}
       CRYPTO_POLICY: "unlimited"
-      EXTRA_JAVA_OPTS: "-Duser.timezone=${TZ}"
+#      EXTRA_JAVA_OPTS: "-Duser.timezone=${TZ}"
       USER_ID: 999
       GROUP_ID: 994
       LANG: en_US.UTF-8
