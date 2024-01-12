@@ -15,7 +15,7 @@ sudo apt-get install expect -y
 
 # Change to the directory containing the .deb files
 cd "$DEB_FOLDER" || exit
-# Install openvpn
+# Install openvpn using .deb file
 sudo apt-get install libpkcs11-helper1
 sudo dpkg -i openvpn_2.5.1-3_arm64.deb
 
