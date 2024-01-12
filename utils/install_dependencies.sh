@@ -29,8 +29,6 @@ else
     echo "OpenVPN installation successful."
 fi
 
-
-
 ##### Docker #####
 # Navigate one level up
 cd ..
@@ -71,6 +69,8 @@ fi
 # Install docker
 pip install docker==6.1.3
 
+sudo apt-get install docker.io -y
+
 # Check if Docker is installed
 if ! command -v docker &>/dev/null; then
     echo "Docker installation failed. Please check the installation steps and try again."
@@ -79,10 +79,6 @@ if ! command -v docker &>/dev/null; then
 else
     echo "Docker installation successful. Version: $(docker --version)"
 fi
-
-
-
-
 
 
 ###### Docker ##### old procedure with deb files
