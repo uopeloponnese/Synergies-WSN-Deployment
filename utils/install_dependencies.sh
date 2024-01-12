@@ -11,7 +11,13 @@ sudo apt-get install expect -y
 
 ##### OVPN #####
 #sudo apt-get install openvpn -y
-sudo apt-get install openvpn=2.5.1-3 -y
+#sudo apt-get install openvpn=2.5.1-3 -y
+
+# Change to the directory containing the .deb files
+cd "$DEB_FOLDER" || exit
+# Install openvpn
+sudo apt-get install libpkcs11-helper1
+sudo dpkg -i openvpn_2.5.1-3_arm64.deb
 
 # Check if OpenVPN is installed
 if ! command -v openvpn &>/dev/null; then
