@@ -17,7 +17,7 @@ sudo apt-get install expect -y
 # Change to the directory containing the .deb files
 cd "$DEB_FOLDER" || exit
 # Install openvpn using .deb file
-sudo apt-get install libpkcs11-helper1
+sudo apt-get install libpkcs11-helper1 libssl1.1
 sudo dpkg -i openvpn_2.5.1-3_arm64.deb
 
 # Check if OpenVPN is installed
@@ -65,6 +65,12 @@ if ! command -v docker-compose &>/dev/null; then
 else
     echo "Docker Compose installation successful. Version: $(docker-compose --version)"
 fi
+
+# Uninstall existing requests library
+pip uninstall requests -y
+
+# Install specific version of requests library
+pip install requests==2.31.0
 
 # Install docker
 pip install docker==6.1.3
