@@ -1,0 +1,6 @@
+paho-mqtt>=1.6.1
+requests>=2.31.0
+pydantic>=1.10.8
+jsonschema>=4.17.3
+python-dotenv>=1.0.0
+

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/command.schema.json",
+  "title": "CommandMessage",
+  "type": "object",
+  "required": ["method", "endpoint", "correlation_id"],
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": ["GET", "POST", "PUT", "DELETE"]
+    },
+    "endpoint": {
+      "type": "string",
+      "pattern": "^/rest(/.*)?$"
+    },
+    "data": {},
+    "headers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 16
+    }
+  },
+  "additionalProperties": false
+}
+
+

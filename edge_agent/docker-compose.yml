@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  edge-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/example/openhab-edge-agent:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: host
+    secrets:
+      - mqtt_ca
+      - mqtt_client_crt
+      - mqtt_client_key
+    volumes:
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+
+secrets:
+  mqtt_ca:
+    file: ./secrets/ca.crt
+  mqtt_client_crt:
+    file: ./secrets/client.crt
+  mqtt_client_key:
+    file: ./secrets/client.key
+

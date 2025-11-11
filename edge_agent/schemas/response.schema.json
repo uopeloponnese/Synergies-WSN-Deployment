@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/response.schema.json",
+  "title": "ResponseMessage",
+  "type": "object",
+  "required": ["correlation_id", "status_code", "timestamp"],
+  "properties": {
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status_code": {
+      "type": "integer"
+    },
+    "data": {},
+    "error": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "from_cache": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}
+
+
