@@ -85,10 +85,11 @@ services:
       dockerfile: openhab_exporter/Dockerfile
     container_name: openhab-exporter
     restart: always
-    depends_on:
-      - openhab
     environment:
-      OPENHAB_BASE_URL: http://oh:${OPENHAB_HTTP_PORT}
+      OPENHAB_BASE_URL: ${OPENHAB_BASE_URL}
+      OPENHAB_API_TOKEN: ${OPENHAB_API_TOKEN}
+      OPENHAB_USERNAME: ${OPENHAB_USERNAME}
+      OPENHAB_PASSWORD: ${OPENHAB_PASSWORD}
       EXPORTER_TARGET_URL: ${EXPORTER_TARGET_URL}
       EXPORTER_API_KEY: ${EXPORTER_API_KEY}
       EXPORTER_INTERVAL_SECONDS: ${EXPORTER_INTERVAL_SECONDS}

@@ -79,16 +79,20 @@ class OpenHABClient:
         session: Session,
         timeout: float,
         persistence_service: Optional[str],
+        api_token: Optional[str] = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.session = session
         self.timeout = timeout
         self.persistence_service = persistence_service
+        self.api_token = api_token
 
     def _request(self, method: str, path: str, **kwargs: Any) -> Response:
         url = f"{self.base_url}{path}"
         headers = kwargs.pop("headers", {})
         headers.setdefault("Accept", "application/json")
+        if self.api_token:
+            headers["Authorization"] = f"Bearer {self.api_token}"
         return self.session.request(method, url, headers=headers, timeout=self.timeout, **kwargs)
 
     def fetch_things(self) -> List[Dict[str, Any]]:
@@ -342,9 +346,10 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     username = os.getenv("OPENHAB_USERNAME")
     password = os.getenv("OPENHAB_PASSWORD")
+    api_token = os.getenv("OPENHAB_API_TOKEN") or None
 
     session = build_session(username, password, verify_tls)
-    client = OpenHABClient(openhab_url, session, openhab_timeout, persistence_service)
+    client = OpenHABClient(openhab_url, session, openhab_timeout, persistence_service, api_token=api_token)
     exporter = Exporter(site_id, client, remote_url, interval, timeout, api_key, max_retries)
 
     try:

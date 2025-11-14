@@ -58,11 +58,7 @@ This repository includes scripts and configuration files for the automated deplo
 
 5. **Configure the exporter:**
 
-   Open `config.env` and adjust the exporter section:
-
-   - `EXPORTER_TARGET_URL` – HTTPS endpoint that will receive the payload.
-   - `EXPORTER_API_KEY` – Optional API key sent as the `X-API-Key` header.
-   - `EXPORTER_INTERVAL_SECONDS` – How often the exporter posts measurements (default: 300 seconds).
+   Open `config.env` and adjust the exporter section. See the [Measurement Exporter](#measurement-exporter) section below for detailed configuration instructions.
 
    The deployment script stores the provided `site_id` in both the `ID` file and `config.env` so that the exporter can reuse it.
 
@@ -77,14 +73,134 @@ This repository includes scripts and configuration files for the automated deplo
 
 ## Measurement Exporter
 
-The `openhab-exporter` container is part of `docker-compose.yml` and runs alongside openHAB and InfluxDB. It:
+The `openhab-exporter` container is part of `docker-compose.yml` and runs alongside openHAB and InfluxDB. It periodically collects the latest state for all items grouped by thing/channel and forwards the payload to a remote HTTP endpoint.
 
-- Reads the `SITE_ID` from the shared `ID` file (falling back to the `SITE_ID` environment variable if necessary).
-- Queries openHAB for all things/channels and resolves the linked items.
-- Grabs the latest value for each item and, when configured, the corresponding entry from the selected persistence service (default: `influxdb`).
-- Posts a structured JSON payload to the remote endpoint defined in `config.env`.
+### How It Works
 
-> The exporter service honours additional tuning options such as `EXPORTER_HTTP_TIMEOUT_SECONDS`, `EXPORTER_MAX_RETRIES`, `OPENHAB_HTTP_TIMEOUT_SECONDS`, and `OPENHAB_PERSISTENCE_SERVICE`.
+The exporter:
+- Reads the `SITE_ID` from the shared `ID` file (falling back to the `SITE_ID` environment variable if necessary)
+- Queries openHAB REST API for all things/channels and resolves the linked items
+- Fetches the latest value for each item and, when configured, the corresponding entry from the selected persistence service (default: `influxdb`)
+- Posts a structured JSON payload to the remote endpoint defined in `config.env`
+
+### Configuration
+
+Configure the exporter by editing `config.env`:
+
+#### OpenHAB Connection
+
+- **`OPENHAB_BASE_URL`** – Base URL for the openHAB REST API
+  - For local docker: `http://oh:8080`
+  - For remote: `http://remote-host:8080` or `https://remote-host:8443`
+
+#### OpenHAB Authentication
+
+Choose one authentication method:
+
+- **`OPENHAB_API_TOKEN`** – API token for Bearer token authentication (preferred for remote instances)
+  - Generate in openHAB: Settings → API Tokens
+  - Sent as `Authorization: Bearer <token>` header
+
+- **`OPENHAB_USERNAME`** and **`OPENHAB_PASSWORD`** – Basic authentication credentials
+  - Used if API token is not provided
+
+#### Remote Endpoint
+
+- **`EXPORTER_TARGET_URL`** – HTTPS endpoint that will receive the payload (required)
+  - Example: `https://api.example.com/wsn/data`
+
+- **`EXPORTER_API_KEY`** – Optional API key sent as the `X-API-Key` header to the remote endpoint
+  - Leave empty if the remote endpoint doesn't require authentication
+
+#### Timing Configuration
+
+- **`EXPORTER_INTERVAL_SECONDS`** – How often the exporter posts measurements (default: 300 seconds = 5 minutes)
+- **`EXPORTER_HTTP_TIMEOUT_SECONDS`** – HTTP timeout for requests to the remote endpoint (default: 15 seconds)
+- **`EXPORTER_MAX_RETRIES`** – Maximum number of retry attempts on failure (default: 3)
+- **`OPENHAB_HTTP_TIMEOUT_SECONDS`** – HTTP timeout for openHAB API requests (default: 10 seconds)
+
+#### Persistence Service
+
+- **`OPENHAB_PERSISTENCE_SERVICE`** – Persistence service ID to query for historical data (default: `influxdb`)
+  - Set to empty string to disable persistence data fetching
+
+### Starting the Exporter
+
+The exporter is automatically started with docker-compose:
+
+```bash
+docker-compose --env-file config.env up -d openhab-exporter
+```
+
+### Monitoring
+
+View exporter logs:
+
+```bash
+docker logs -f openhab-exporter
+```
+
+The exporter will log:
+- Successful payload deliveries with response codes
+- Errors connecting to openHAB or the remote endpoint
+- Retry attempts on failures
+
+### Payload Structure
+
+The exporter sends a JSON payload with the following structure:
+
+```json
+{
+  "site_id": "GRC-XXX",
+  "generated_at": "2025-11-14T12:00:00Z",
+  "things": [
+    {
+      "uid": "zwave:device:xxx:node4",
+      "thing_type_uid": "zwave:aeotec_zw175_00_000",
+      "label": "Device Label",
+      "location": "Room Name",
+      "status": "ONLINE",
+      "channels": [
+        {
+          "uid": "zwave:device:xxx:node4:switch_binary",
+          "id": "switch_binary",
+          "label": "Switch",
+          "item_type": "Switch",
+          "kind": "STATE",
+          "linked_items": [
+            {
+              "name": "ItemName",
+              "label": "Item Label",
+              "state": "ON",
+              "type": "Switch",
+              "persistence": {
+                "time": 1763059784543,
+                "state": "ON"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Troubleshooting
+
+**Exporter can't connect to OpenHAB:**
+- Verify `OPENHAB_BASE_URL` is correct
+- Check authentication credentials (API token or username/password)
+- Ensure OpenHAB is accessible from the exporter container
+
+**Exporter can't reach remote endpoint:**
+- Verify `EXPORTER_TARGET_URL` is correct and accessible
+- Check network connectivity from the container
+- Verify API key if required by the remote endpoint
+
+**No persistence data:**
+- Ensure `OPENHAB_PERSISTENCE_SERVICE` matches your configured persistence service ID
+- Verify the persistence service is enabled and has data
 
 
 ## License
