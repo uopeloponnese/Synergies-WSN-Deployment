@@ -133,3 +133,4 @@ dmypy.json
 
 # the ID file with the site_id
 ID
+edge_agent/
