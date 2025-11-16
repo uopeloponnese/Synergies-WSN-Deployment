@@ -148,7 +148,7 @@ def main() -> None:
     if args.list_items:
         endpoint = "/rest/items"
     else:
-        endpoint = f"/rest/items/{args.item}/state"
+        endpoint = f"/rest/items/{args.item}"
     command_payload = {
         "method": args.method,
         "endpoint": endpoint,
