@@ -79,37 +79,66 @@ class MQTTClient:
             # Never let logging issues interfere with MQTT processing.
             logger.debug("Failed to log MQTT client message", exc_info=True)
 
-    def _on_connect(self, client: mqtt.Client, userdata, flags, rc):
+    # def _on_connect(self, client: mqtt.Client, userdata, flags, rc):
+    #     if rc != 0:
+    #         logger.error("MQTT connection failed", extra={"rc": rc})
+    #         return
+    #     logger.info(
+    #         "MQTT connected",
+    #         extra={
+    #             "host": self._host,
+    #             "port": self._port,
+    #             "command_topic": self._topics.get("command"),
+    #             "response_topic": self._topics.get("response"),
+    #             "status_topic": self._topics.get("status"),
+    #             "data_topic": self._topics.get("data"),
+    #         },
+    #     )
+    #     # Subscribe to the command topic and log the broker's acknowledgement.
+    #     result, mid = client.subscribe(self._topics["command"], qos=1)
+    #     logger.info(
+    #         "Subscribe requested for command topic",
+    #         extra={"topic": self._topics.get("command"), "result": result, "mid": mid},
+    #     )
+    #     status_payload = json.dumps({"status": "online", "ts": _iso_timestamp()})
+    #     self.publish(self._topics["status"], status_payload, qos=1, retain=True)
+    #     result, mid = client.subscribe("#", qos=0)
+    #     logger.info("Subscribe requested for #", extra={"result": result, "mid": mid})
+
+    def _on_connect(self, client, userdata, flags, rc):
         if rc != 0:
             logger.error("MQTT connection failed", extra={"rc": rc})
             return
+
+        logger.info("MQTT connected", extra={...})
+
+        # DEBUG: subscribe to everything
+        result, mid = client.subscribe("#", qos=0)
         logger.info(
-            "MQTT connected",
-            extra={
-                "host": self._host,
-                "port": self._port,
-                "command_topic": self._topics.get("command"),
-                "response_topic": self._topics.get("response"),
-                "status_topic": self._topics.get("status"),
-                "data_topic": self._topics.get("data"),
-            },
+            "Subscribe requested for #",
+            extra={"result": result, "mid": mid},
         )
-        # Subscribe to the command topic and log the broker's acknowledgement.
-        result, mid = client.subscribe(self._topics["command"], qos=1)
-        logger.info(
-            "Subscribe requested for command topic",
-            extra={"topic": self._topics.get("command"), "result": result, "mid": mid},
-        )
+
         status_payload = json.dumps({"status": "online", "ts": _iso_timestamp()})
         self.publish(self._topics["status"], status_payload, qos=1, retain=True)
-        result, mid = client.subscribe("#", qos=0)
-        logger.info("Subscribe requested for #", extra={"result": result, "mid": mid})
+
 
     def _on_disconnect(self, client: mqtt.Client, userdata, rc):
         if rc != 0:
             logger.warning("Unexpected MQTT disconnection", extra={"rc": rc})
         else:
             logger.info("MQTT disconnected cleanly")
+
+    # def _on_subscribe(self, client: mqtt.Client, userdata, mid, granted_qos):
+    #     logger.info(
+    #         "SUBACK received",
+    #         extra={"mid": mid, "granted_qos": granted_qos},
+    #     )
+    #     if granted_qos and granted_qos[0] == 128:
+    #         logger.error(
+    #             "Broker rejected subscription to command topic",
+    #             extra={"mid": mid},
+    #         )
 
     def _on_subscribe(self, client: mqtt.Client, userdata, mid, granted_qos):
         logger.info(
@@ -121,6 +150,7 @@ class MQTTClient:
                 "Broker rejected subscription to command topic",
                 extra={"mid": mid},
             )
+
 
     def _on_message(self, client: mqtt.Client, userdata, message: mqtt.MQTTMessage):
         # Log that the callback fired before doing any parsing so we can
