@@ -17,5 +17,5 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --find-links=/wheels -r requirements.txt && rm -rf /wheels
 COPY . /app
 USER edgeagent
-ENTRYPOINT ["python", "-m", "edge_agent.edge_agent"]
+ENTRYPOINT ["python", "edge_agent.py"]
 

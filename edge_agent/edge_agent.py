@@ -9,11 +9,11 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from .config import Settings, load_settings
-from .idempotency_cache import IdempotencyCache
-from .mqtt_client import MQTTClient
-from .openhab_proxy import OpenHABProxy
-from .schemas import validate_command
+from config import Settings, load_settings
+from idempotency_cache import IdempotencyCache
+from mqtt_client import MQTTClient
+from openhab_proxy import OpenHABProxy
+from schemas import validate_command
 
 logger = logging.getLogger(__name__)
 
