@@ -191,12 +191,23 @@ class MQTTClient:
         self._client.disconnect()
         self._loop_running.clear()
 
+    # def publish(self, topic: str, payload: str, qos: int = 0, retain: bool = False) -> None:
+    #     logger.debug("Publishing MQTT message", extra={"topic": topic, "qos": qos, "retain": retain})
+    #     result = self._client.publish(topic, payload=payload, qos=qos, retain=retain)
+    #     result.wait_for_publish()
+    #     if result.rc != mqtt.MQTT_ERR_SUCCESS:
+    #         logger.error("MQTT publish failed", extra={"topic": topic, "rc": result.rc})
+
     def publish(self, topic: str, payload: str, qos: int = 0, retain: bool = False) -> None:
-        logger.debug("Publishing MQTT message", extra={"topic": topic, "qos": qos, "retain": retain})
+        logger.debug(
+            "Publishing MQTT message",
+            extra={"topic": topic, "qos": qos, "retain": retain},
+        )
         result = self._client.publish(topic, payload=payload, qos=qos, retain=retain)
-        result.wait_for_publish()
+        # DO NOT call wait_for_publish() here when using loop_start() & callbacks
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.error("MQTT publish failed", extra={"topic": topic, "rc": result.rc})
+
 
     def publish_status(self, status: str, retain: bool = False) -> None:
         payload = json.dumps({"status": status, "ts": _iso_timestamp()})
