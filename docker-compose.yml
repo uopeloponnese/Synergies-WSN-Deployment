@@ -79,6 +79,33 @@ services:
         aliases:
           - app
 
+  openhab-exporter:
+    build:
+      context: .
+      dockerfile: openhab_exporter/Dockerfile
+    container_name: openhab-exporter
+    restart: always
+    environment:
+      OPENHAB_BASE_URL: ${OPENHAB_BASE_URL}
+      OPENHAB_API_TOKEN: ${OPENHAB_API_TOKEN}
+      OPENHAB_USERNAME: ${OPENHAB_USERNAME}
+      OPENHAB_PASSWORD: ${OPENHAB_PASSWORD}
+      EXPORTER_TARGET_URL: ${EXPORTER_TARGET_URL}
+      EXPORTER_API_KEY: ${EXPORTER_API_KEY}
+      EXPORTER_INTERVAL_SECONDS: ${EXPORTER_INTERVAL_SECONDS}
+      EXPORTER_HTTP_TIMEOUT_SECONDS: ${EXPORTER_HTTP_TIMEOUT_SECONDS}
+      EXPORTER_MAX_RETRIES: ${EXPORTER_MAX_RETRIES}
+      SITE_ID: ${SITE_ID}
+      SITE_ID_FILE: /data/site/ID
+      OPENHAB_HTTP_TIMEOUT_SECONDS: ${OPENHAB_HTTP_TIMEOUT_SECONDS}
+      OPENHAB_PERSISTENCE_SERVICE: ${OPENHAB_PERSISTENCE_SERVICE}
+    volumes:
+      - ./ID:/data/site/ID:ro
+    networks:
+      wsn-bridge:
+        aliases:
+          - exporter
+
 volumes:
   data_openhab_conf:
   data_openhab_addons:

@@ -127,12 +127,39 @@ if [[ ! -f "${EDGE_COMPOSE_FILE}" ]]; then
   exit 1
 fi
 
-echo "Starting edge stack using docker-compose.edge.yml..."
+echo "Starting edge stack (edge agent) using docker-compose.edge.yml..."
 
 if command -v docker-compose >/dev/null 2>&1; then
   docker-compose -f "${EDGE_COMPOSE_FILE}" up -d
 else
   docker compose -f "${EDGE_COMPOSE_FILE}" up -d
+fi
+
+echo
+echo "Edge agent started."
+echo
+
+read -r -p "Exporter target URL (EXPORTER_TARGET_URL) [leave empty to skip starting exporter]: " EXPORTER_TARGET_URL
+
+if [[ -n "${EXPORTER_TARGET_URL}" ]]; then
+  read -r -p "Exporter API key (EXPORTER_API_KEY) [optional]: " EXPORTER_API_KEY
+
+  echo
+  echo "Starting openhab-exporter container using docker-compose.yml..."
+
+  if command -v docker-compose >/dev/null 2>&1; then
+    SITE_ID="${SITE_ID}" OPENHAB_API_TOKEN="${OH_TOKEN}" EXPORTER_TARGET_URL="${EXPORTER_TARGET_URL}" EXPORTER_API_KEY="${EXPORTER_API_KEY}" \
+      docker-compose --env-file "${CONFIG_ENV_FILE}" up -d openhab-exporter
+  else
+    SITE_ID="${SITE_ID}" OPENHAB_API_TOKEN="${OH_TOKEN}" EXPORTER_TARGET_URL="${EXPORTER_TARGET_URL}" EXPORTER_API_KEY="${EXPORTER_API_KEY}" \
+      docker compose --env-file "${CONFIG_ENV_FILE}" up -d openhab-exporter
+  fi
+
+  echo
+  echo "Exporter started."
+else
+  echo
+  echo "No exporter target URL provided. Skipping exporter startup."
 fi
 
 echo

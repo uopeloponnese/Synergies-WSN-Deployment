@@ -19,6 +19,16 @@ vpn_password=$4
 # Create the ID file with the site_id
 echo "$1" > ID
 
+# Update SITE_ID entry inside config.env for downstream services
+config_file="config.env"
+if [[ -f "$config_file" ]]; then
+    if grep -q '^SITE_ID=' "$config_file"; then
+        sed -i "s/^SITE_ID=.*/SITE_ID=\"$site_id\"/" "$config_file"
+    else
+        echo "SITE_ID=\"$site_id\"" >> "$config_file"
+    fi
+fi
+
 # Change to the utils directory
 cd utils || { echo "Error - No utils folder"; exit 1; }
 chmod +x install_dependencies.sh
