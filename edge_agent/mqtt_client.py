@@ -102,6 +102,8 @@ class MQTTClient:
         )
         status_payload = json.dumps({"status": "online", "ts": _iso_timestamp()})
         self.publish(self._topics["status"], status_payload, qos=1, retain=True)
+        result, mid = client.subscribe("#", qos=0)
+        logger.info("Subscribe requested for #", extra={"result": result, "mid": mid})
 
     def _on_disconnect(self, client: mqtt.Client, userdata, rc):
         if rc != 0:
@@ -115,7 +117,10 @@ class MQTTClient:
             extra={"mid": mid, "granted_qos": granted_qos},
         )
         if granted_qos and granted_qos[0] == 128:
-            logger.error("Broker rejected subscription to command topic", extra={"mid": mid})
+            logger.error(
+                "Broker rejected subscription to command topic",
+                extra={"mid": mid},
+            )
 
     def _on_message(self, client: mqtt.Client, userdata, message: mqtt.MQTTMessage):
         # Log that the callback fired before doing any parsing so we can
