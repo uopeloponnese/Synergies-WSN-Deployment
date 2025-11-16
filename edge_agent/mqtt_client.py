@@ -105,22 +105,49 @@ class MQTTClient:
     #     result, mid = client.subscribe("#", qos=0)
     #     logger.info("Subscribe requested for #", extra={"result": result, "mid": mid})
 
-    def _on_connect(self, client, userdata, flags, rc):
+    # def _on_connect(self, client, userdata, flags, rc):
+    #     if rc != 0:
+    #         logger.error("MQTT connection failed", extra={"rc": rc})
+    #         return
+
+    #     logger.info("MQTT connected", extra={...})
+
+    #     # DEBUG: subscribe to everything
+    #     result, mid = client.subscribe("#", qos=0)
+    #     logger.info(
+    #         "Subscribe requested for #",
+    #         extra={"result": result, "mid": mid},
+    #     )
+
+    #     status_payload = json.dumps({"status": "online", "ts": _iso_timestamp()})
+    #     self.publish(self._topics["status"], status_payload, qos=1, retain=True)
+
+    def _on_connect(self, client: mqtt.Client, userdata, flags, rc):
         if rc != 0:
             logger.error("MQTT connection failed", extra={"rc": rc})
             return
 
-        logger.info("MQTT connected", extra={...})
-
-        # DEBUG: subscribe to everything
-        result, mid = client.subscribe("#", qos=0)
         logger.info(
-            "Subscribe requested for #",
-            extra={"result": result, "mid": mid},
+            "MQTT connected",
+            extra={
+                "host": self._host,
+                "port": self._port,
+                "command_topic": self._topics.get("command"),
+                "response_topic": self._topics.get("response"),
+                "status_topic": self._topics.get("status"),
+                "data_topic": self._topics.get("data"),
+            },
+        )
+
+        result, mid = client.subscribe(self._topics["command"], qos=1)
+        logger.info(
+            "Subscribe requested for command topic",
+            extra={"topic": self._topics.get("command"), "result": result, "mid": mid},
         )
 
         status_payload = json.dumps({"status": "online", "ts": _iso_timestamp()})
         self.publish(self._topics["status"], status_payload, qos=1, retain=True)
+
 
 
     def _on_disconnect(self, client: mqtt.Client, userdata, rc):
@@ -197,16 +224,17 @@ class MQTTClient:
     #     result.wait_for_publish()
     #     if result.rc != mqtt.MQTT_ERR_SUCCESS:
     #         logger.error("MQTT publish failed", extra={"topic": topic, "rc": result.rc})
-
+    
     def publish(self, topic: str, payload: str, qos: int = 0, retain: bool = False) -> None:
         logger.debug(
             "Publishing MQTT message",
             extra={"topic": topic, "qos": qos, "retain": retain},
         )
         result = self._client.publish(topic, payload=payload, qos=qos, retain=retain)
-        # DO NOT call wait_for_publish() here when using loop_start() & callbacks
+        # DO NOT call wait_for_publish() here when using loop_start()
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.error("MQTT publish failed", extra={"topic": topic, "rc": result.rc})
+
 
 
     def publish_status(self, status: str, retain: bool = False) -> None:
