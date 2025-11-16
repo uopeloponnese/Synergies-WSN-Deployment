@@ -45,6 +45,8 @@ class MQTTClient:
         self._client.on_message = self._on_message
         self._client.on_disconnect = self._on_disconnect
         self._client.on_subscribe = self._on_subscribe
+        # Bridge Paho's internal logs into our logger for easier debugging.
+        self._client.on_log = self._on_log
         if username:
             self._client.username_pw_set(username=username, password=password)
         self._host = host
@@ -65,6 +67,17 @@ class MQTTClient:
         self._loop_running = threading.Event()
 
     # Callbacks -----------------------------------------------------------------
+    def _on_log(self, client: mqtt.Client, userdata, level, buf):
+        """Bridge Paho's internal logging into our logger."""
+        try:
+            if level >= mqtt.MQTT_LOG_INFO:
+                logger.info("MQTT client log", extra={"level": level, "message": buf})
+            else:
+                logger.debug("MQTT client log", extra={"level": level, "message": buf})
+        except Exception:
+            # Never let logging issues interfere with MQTT processing.
+            logger.debug("Failed to log MQTT client message", exc_info=True)
+
     def _on_connect(self, client: mqtt.Client, userdata, flags, rc):
         if rc != 0:
             logger.error("MQTT connection failed", extra={"rc": rc})
@@ -80,10 +93,11 @@ class MQTTClient:
                 "data_topic": self._topics.get("data"),
             },
         )
-        client.subscribe(self._topics["command"], qos=1)
+        # Subscribe to the command topic and log the broker's acknowledgement.
+        result, mid = client.subscribe(self._topics["command"], qos=1)
         logger.info(
-            "Subscribed to command topic",
-            extra={"topic": self._topics.get("command")},
+            "Subscribe requested for command topic",
+            extra={"topic": self._topics.get("command"), "result": result, "mid": mid},
         )
         status_payload = json.dumps({"status": "online", "ts": _iso_timestamp()})
         self.publish(self._topics["status"], status_payload, qos=1, retain=True)
@@ -98,14 +112,17 @@ class MQTTClient:
         logger.debug("Subscribed to command topic", extra={"mid": mid, "granted_qos": granted_qos})
 
     def _on_message(self, client: mqtt.Client, userdata, message: mqtt.MQTTMessage):
+        # Log that the callback fired before doing any parsing so we can
+        # distinguish missing callbacks from JSON/handler errors.
+        raw_payload = message.payload.decode("utf-8", errors="replace")
+        logger.info(
+            "MQTT on_message callback invoked",
+            extra={"topic": message.topic, "payload": raw_payload},
+        )
+
         command: Optional[Dict[str, Any]] = None
         try:
-            payload = message.payload.decode("utf-8")
-            command = json.loads(payload)
-            logger.info(
-                "Received MQTT command",
-                extra={"topic": message.topic, "payload": payload},
-            )
+            command = json.loads(raw_payload)
             response = self._on_command(command)
             self.publish(self._topics["response"], json.dumps(response), qos=1, retain=False)
         except Exception as exc:  # pragma: no cover - defensive path
