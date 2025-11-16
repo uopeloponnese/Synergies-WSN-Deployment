@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  edge-agent:
+    build:
+      context: ./edge_agent
+      dockerfile: Dockerfile
+    image: synergies/openhab-edge-agent:latest
+    container_name: edge-agent
+    restart: unless-stopped
+    env_file:
+      - ./edge_agent/.env
+    network_mode: host
+    secrets:
+      - mqtt_ca
+      - mqtt_client_crt
+      - mqtt_client_key
+    volumes:
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+
+  # NOTE: An OpenHAB exporter container can be added here alongside the edge agent
+  # once its Dockerfile and configuration are finalized, for example:
+  #
+  # openhab-exporter:
+  #   build:
+  #     context: ./openhab_exporter
+  #     dockerfile: Dockerfile
+  #   image: synergies/openhab-exporter:latest
+  #   container_name: openhab-exporter
+  #   restart: unless-stopped
+  #   env_file:
+  #     - ./edge_agent/.env
+  #   network_mode: host
+
+secrets:
+  mqtt_ca:
+    file: ./edge_agent/secrets/ca.crt
+  mqtt_client_crt:
+    file: ./edge_agent/secrets/client.crt
+  mqtt_client_key:
+    file: ./edge_agent/secrets/client.key
+
+

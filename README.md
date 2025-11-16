@@ -42,12 +42,32 @@ This repository includes scripts and configuration files for the automated deplo
    ```bash
    chmod +x deploy.sh
 
-4. **Execute the script:**
+4. **Execute the script (core stack deployment):**
 
    ```bash
    ./deploy.sh GRC-XXX wsn.uopcloud.net 62832 my_password
-   
-*[NOTE: The site ID (GRC-XXX) and the vpn password will be provided by the UoP WSN Technical Consultant upon request]*
+   ```
+
+   *[NOTE: The site ID (GRC-XXX) and the VPN password will be provided by the UoP WSN Technical Consultant upon request]*
+
+5. **(Optional) Deploy edge features (edge agent, exporter, etc.):**
+
+   After the core stack is up and the OpenHAB UI is reachable:
+
+   - Log into OpenHAB and create/copy an API token.
+   - Then run:
+
+   ```bash
+   ./deploy_edge_features.sh
+   ```
+
+   The script will:
+
+   - Read the site ID from the `ID` file (created by `deploy.sh`).
+   - Use `config.env` to determine the OpenHAB URL.
+   - Prompt you for the OpenHAB API token and MQTT configuration.
+   - Create/update `edge_agent/.env`.
+   - Start the edge stack using `docker-compose.edge.yml`.
    
 
 ## License
