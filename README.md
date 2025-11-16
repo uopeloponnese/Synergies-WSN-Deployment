@@ -159,18 +159,22 @@ For a quick end-to-end MQTT test against the edge agent and openHAB:
    pip install paho-mqtt
    ```
 
-3. Run the test script to read an item's state via openHAB REST, through the edge agent and MQTT:
+3. Run the test script to read an item's state or fetch the full items list via openHAB REST, through the edge agent and MQTT:
 
    ```bash
    cd Synergies-WSN-Deployment
+   # Fetch the state of a specific item
    python utils/test_mqtt_openhab.py --item YourItemName
+
+   # Fetch the full /rest/items list (e.g. when you don't yet know item names)
+   python utils/test_mqtt_openhab.py --list-items
    ```
 
    Replace `YourItemName` with a real openHAB item name. The script will:
 
    - Read `SITE_ID` from `ID` (fallback to `SITE_ID` in `config.env`).
    - Read `MQTT_HOST` / `MQTT_PORT` from `config.env`.
-   - Publish a GET command to `wsn/<SITE_ID>/openhab/command` for `/rest/items/<item>/state`.
+   - Publish a GET command to `wsn/<SITE_ID>/openhab/command` for `/rest/items/<item>/state` (or `/rest/items` when using `--list-items`).
    - Listen on `wsn/<SITE_ID>/openhab/response` and print the JSON response.
 
 ### How It Works

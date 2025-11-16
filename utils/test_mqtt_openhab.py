@@ -2,9 +2,13 @@
 """
 Quick MQTT test script for the edge agent / openHAB integration.
 
-Usage example (from the repo root):
+Usage examples (from the repo root):
 
+    # Fetch a specific item's state
     python utils/test_mqtt_openhab.py --item YourItemName
+
+    # Fetch the full /rest/items list
+    python utils/test_mqtt_openhab.py --list-items
 
 The script will:
   - Read SITE_ID from the ID file (or SITE_ID in config.env as a fallback)
@@ -77,8 +81,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Test edge-agent MQTT command to openHAB.")
     parser.add_argument(
         "--item",
-        required=True,
-        help="openHAB item name to query (e.g. MySwitch)",
+        help="openHAB item name to query (e.g. MySwitch). Mutually exclusive with --list-items.",
+    )
+    parser.add_argument(
+        "--list-items",
+        action="store_true",
+        help="Fetch the full /rest/items list from openHAB via the edge agent.",
     )
     parser.add_argument(
         "--method",
@@ -98,6 +106,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     args = build_parser().parse_args()
+
+    if not args.list_items and not args.item:
+        raise SystemExit("You must provide either --item <name> or --list-items.")
 
     site_id = resolve_site_id()
     mqtt_host, mqtt_port = resolve_mqtt_config()
@@ -128,7 +139,10 @@ def main() -> None:
     client.subscribe(response_topic, qos=1)
     client.loop_start()
 
-    endpoint = f"/rest/items/{args.item}/state"
+    if args.list_items:
+        endpoint = "/rest/items"
+    else:
+        endpoint = f"/rest/items/{args.item}/state"
     command_payload = {
         "method": args.method,
         "endpoint": endpoint,
