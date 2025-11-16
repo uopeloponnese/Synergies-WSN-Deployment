@@ -70,11 +70,11 @@ class MQTTClient:
     def _on_log(self, client: mqtt.Client, userdata, level, buf):
         """Bridge Paho's internal logging into our logger."""
         try:
-            extra = {"mqtt_level": level, "mqtt_detail": buf}
+            # Include buf in the log message itself so we can see what Paho is doing.
             if level >= mqtt.MQTT_LOG_INFO:
-                logger.info("MQTT client log", extra=extra)
+                logger.info("MQTT client log: %s", buf)
             else:
-                logger.debug("MQTT client log", extra=extra)
+                logger.debug("MQTT client log: %s", buf)
         except Exception:
             # Never let logging issues interfere with MQTT processing.
             logger.debug("Failed to log MQTT client message", exc_info=True)
