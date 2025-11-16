@@ -94,6 +94,56 @@ This repository includes scripts and configuration files for the automated deplo
 
 The `openhab-exporter` container is part of `docker-compose.yml` and runs alongside openHAB and InfluxDB. It periodically collects the latest state for all items grouped by thing/channel and forwards the payload to a remote HTTP endpoint.
 
+### Quick Test Containers (MQTT + Exporter)
+
+You can run a minimal test setup with:
+
+1. **Start a test MQTT broker (for edge-agent tests):**
+
+   ```bash
+   docker run -d --name test-mqtt -p 1883:1883 eclipse-mosquitto
+   ```
+
+   Then set in `config.env`:
+
+   ```env
+   MQTT_HOST="127.0.0.1"
+   MQTT_PORT=1883
+   MQTT_TLS=false
+   ```
+
+   and re-run `./deploy_edge_features.sh` so the edge agent uses this broker.
+
+2. **Start only the exporter container (core stack + config.env required):**
+
+   Make sure:
+
+   - Core stack (`openhab`, `influxdb`) is running.
+   - `config.env` has `OPENHAB_BASE_URL`, `OPENHAB_API_TOKEN` (or user/password),
+     `EXPORTER_TARGET_URL`, and any other required exporter settings.
+
+   Then run:
+
+   ```bash
+   docker-compose --env-file config.env up -d openhab-exporter
+   ```
+
+3. **Check logs:**
+
+   ```bash
+   docker logs -f test-mqtt
+   docker logs -f openhab-exporter
+   ```
+
+4. **Stop and remove the test containers:**
+
+   ```bash
+   docker stop openhab-exporter test-mqtt
+   docker rm openhab-exporter test-mqtt
+   ```
+
+   This leaves your core stack running.
+
 ### How It Works
 
 The exporter:
