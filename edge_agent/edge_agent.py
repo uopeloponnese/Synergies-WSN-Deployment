@@ -26,7 +26,8 @@ def configure_logging() -> None:
     )
     handler.setFormatter(formatter)
     root = logging.getLogger()
-    root.setLevel(logging.INFO)
+    # Use DEBUG during MQTT debugging so we can see subscription and client logs.
+    root.setLevel(logging.DEBUG)
     root.handlers.clear()
     root.addHandler(handler)
 

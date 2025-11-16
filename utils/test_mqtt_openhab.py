@@ -123,7 +123,13 @@ def main() -> None:
     response_queue: "queue.Queue[dict]" = queue.Queue()
     correlation_id = str(uuid.uuid4())
 
-    client = mqtt.Client(client_id=f"mqtt-test-{correlation_id}", clean_session=True)
+    # Explicitly request the v1 callback API to match the edge agent's usage
+    # and silence the deprecation warning in paho-mqtt 2.x.
+    client = mqtt.Client(
+        mqtt.CallbackAPIVersion.VERSION1,
+        client_id=f"mqtt-test-{correlation_id}",
+        clean_session=True,
+    )
 
     def on_message(_client, _userdata, message):
         try:
