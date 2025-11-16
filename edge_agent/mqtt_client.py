@@ -69,8 +69,22 @@ class MQTTClient:
         if rc != 0:
             logger.error("MQTT connection failed", extra={"rc": rc})
             return
-        logger.info("MQTT connected", extra={"host": self._host, "port": self._port})
+        logger.info(
+            "MQTT connected",
+            extra={
+                "host": self._host,
+                "port": self._port,
+                "command_topic": self._topics.get("command"),
+                "response_topic": self._topics.get("response"),
+                "status_topic": self._topics.get("status"),
+                "data_topic": self._topics.get("data"),
+            },
+        )
         client.subscribe(self._topics["command"], qos=1)
+        logger.info(
+            "Subscribed to command topic",
+            extra={"topic": self._topics.get("command")},
+        )
         status_payload = json.dumps({"status": "online", "ts": _iso_timestamp()})
         self.publish(self._topics["status"], status_payload, qos=1, retain=True)
 
@@ -88,7 +102,10 @@ class MQTTClient:
         try:
             payload = message.payload.decode("utf-8")
             command = json.loads(payload)
-            logger.debug("Received command", extra={"topic": message.topic})
+            logger.info(
+                "Received MQTT command",
+                extra={"topic": message.topic, "payload": payload},
+            )
             response = self._on_command(command)
             self.publish(self._topics["response"], json.dumps(response), qos=1, retain=False)
         except Exception as exc:  # pragma: no cover - defensive path
