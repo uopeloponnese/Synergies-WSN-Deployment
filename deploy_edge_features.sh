@@ -7,8 +7,8 @@
 #
 # Responsibilities:
 #   - Read the site ID from the ID file created by deploy.sh.
-#   - Source config.env to determine the OpenHAB URL.
-#   - Prompt the operator for the OpenHAB API token and basic MQTT settings.
+#   - Source config.env to determine the OpenHAB URL and optional MQTT defaults.
+#   - Prompt the operator for the OpenHAB API token and any missing MQTT settings.
 #   - Generate/update the edge_agent/.env file.
 #   - Start the edge stack via docker-compose.edge.yml.
 
@@ -73,24 +73,49 @@ if [[ -z "${OH_TOKEN}" ]]; then
   exit 1
 fi
 
-read -r -p "MQTT broker host (MQTT_HOST): " MQTT_HOST
-if [[ -z "${MQTT_HOST}" ]]; then
-  echo "Error: MQTT_HOST cannot be empty."
-  exit 1
-fi
-
-read -r -p "MQTT broker port (MQTT_PORT) [8883]: " MQTT_PORT
-MQTT_PORT="${MQTT_PORT:-8883}"
-
-read -r -p "MQTT username (MQTT_USERNAME) [optional]: " MQTT_USERNAME
-read -r -s -p "MQTT password (MQTT_PASSWORD) [optional]: " MQTT_PASSWORD
+echo
+echo "MQTT configuration:"
+echo "You can pre-fill MQTT_* values in config.env; any missing values will be requested interactively."
 echo
 
-read -r -p "Path to MQTT CA certificate (MQTT_CA) [/etc/ssl/certs/ca-certificates.crt]: " MQTT_CA
-MQTT_CA="${MQTT_CA:-/etc/ssl/certs/ca-certificates.crt}"
+if [[ -n "${MQTT_HOST:-}" ]]; then
+  echo "Using MQTT_HOST from config.env: ${MQTT_HOST}"
+else
+  read -r -p "MQTT broker host (MQTT_HOST): " MQTT_HOST
+  if [[ -z "${MQTT_HOST}" ]]; then
+    echo "Error: MQTT_HOST cannot be empty."
+    exit 1
+  fi
+fi
 
-read -r -p "Path to MQTT client certificate (MQTT_CERT) [optional]: " MQTT_CERT
-read -r -p "Path to MQTT client key (MQTT_KEY) [optional]: " MQTT_KEY
+if [[ -n "${MQTT_PORT:-}" ]]; then
+  echo "Using MQTT_PORT from config.env: ${MQTT_PORT}"
+else
+  read -r -p "MQTT broker port (MQTT_PORT) [8883]: " MQTT_PORT_INPUT
+  MQTT_PORT="${MQTT_PORT_INPUT:-8883}"
+fi
+
+if [[ -z "${MQTT_USERNAME:-}" ]]; then
+  read -r -p "MQTT username (MQTT_USERNAME) [optional]: " MQTT_USERNAME
+fi
+
+if [[ -z "${MQTT_PASSWORD:-}" ]]; then
+  read -r -s -p "MQTT password (MQTT_PASSWORD) [optional]: " MQTT_PASSWORD
+  echo
+fi
+
+if [[ -z "${MQTT_CA:-}" ]]; then
+  read -r -p "Path to MQTT CA certificate (MQTT_CA) [/etc/ssl/certs/ca-certificates.crt]: " MQTT_CA_INPUT
+  MQTT_CA="${MQTT_CA_INPUT:-/etc/ssl/certs/ca-certificates.crt}"
+fi
+
+if [[ -z "${MQTT_CERT:-}" ]]; then
+  read -r -p "Path to MQTT client certificate (MQTT_CERT) [optional]: " MQTT_CERT
+fi
+
+if [[ -z "${MQTT_KEY:-}" ]]; then
+  read -r -p "Path to MQTT client key (MQTT_KEY) [optional]: " MQTT_KEY
+fi
 
 echo
 echo "Writing edge agent environment to ${EDGE_ENV_FILE}..."

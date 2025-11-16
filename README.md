@@ -69,7 +69,8 @@ This repository includes scripts and configuration files for the automated deplo
 
    - Read the site ID from the `ID` file (created by `deploy.sh`).
    - Use `config.env` to determine the OpenHAB URL.
-   - Prompt you for the OpenHAB API token and MQTT configuration.
+   - Read MQTT settings (`MQTT_HOST`, `MQTT_PORT`, etc.) from `config.env` when available, and only prompt for any missing values.
+   - Prompt you for the OpenHAB API token.
    - Create/update `edge_agent/.env`.
    - Start the edge-agent container using `docker-compose.edge.yml`.
    - Optionally (if you provide an exporter target URL), start the `openhab-exporter` container using `docker-compose.yml`, reusing the same OpenHAB API token.
