@@ -110,7 +110,12 @@ class MQTTClient:
             logger.info("MQTT disconnected cleanly")
 
     def _on_subscribe(self, client: mqtt.Client, userdata, mid, granted_qos):
-        logger.debug("Subscribed to command topic", extra={"mid": mid, "granted_qos": granted_qos})
+        logger.info(
+            "SUBACK received",
+            extra={"mid": mid, "granted_qos": granted_qos},
+        )
+        if granted_qos and granted_qos[0] == 128:
+            logger.error("Broker rejected subscription to command topic", extra={"mid": mid})
 
     def _on_message(self, client: mqtt.Client, userdata, message: mqtt.MQTTMessage):
         # Log that the callback fired before doing any parsing so we can
