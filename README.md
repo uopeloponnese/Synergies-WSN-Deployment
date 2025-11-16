@@ -144,6 +144,35 @@ You can run a minimal test setup with:
 
    This leaves your core stack running.
 
+### Python MQTT/OpenHAB Test Script
+
+For a quick end-to-end MQTT test against the edge agent and openHAB:
+
+1. Ensure:
+   - `ID` has the correct site ID (e.g. `GRC-00`).
+   - `config.env` has `MQTT_HOST` / `MQTT_PORT` pointing to your broker (e.g. `127.0.0.1:1883`).
+   - The `edge-agent` container is running.
+
+2. Install the Python MQTT client (if not already installed):
+
+   ```bash
+   pip install paho-mqtt
+   ```
+
+3. Run the test script to read an item's state via openHAB REST, through the edge agent and MQTT:
+
+   ```bash
+   cd Synergies-WSN-Deployment
+   python utils/test_mqtt_openhab.py --item YourItemName
+   ```
+
+   Replace `YourItemName` with a real openHAB item name. The script will:
+
+   - Read `SITE_ID` from `ID` (fallback to `SITE_ID` in `config.env`).
+   - Read `MQTT_HOST` / `MQTT_PORT` from `config.env`.
+   - Publish a GET command to `wsn/<SITE_ID>/openhab/command` for `/rest/items/<item>/state`.
+   - Listen on `wsn/<SITE_ID>/openhab/response` and print the JSON response.
+
 ### How It Works
 
 The exporter:
