@@ -86,17 +86,44 @@ if [[ -z "${MQTT_PASSWORD:-}" ]]; then
   echo
 fi
 
-if [[ -z "${MQTT_CA:-}" ]]; then
-  read -r -p "Path to MQTT CA certificate (MQTT_CA) [/etc/ssl/certs/ca-certificates.crt]: " MQTT_CA_INPUT
-  MQTT_CA="${MQTT_CA_INPUT:-/etc/ssl/certs/ca-certificates.crt}"
+# Ask about TLS (default: no)
+if [[ -z "${MQTT_TLS:-}" ]]; then
+  read -r -p "Enable MQTT TLS (MQTT_TLS) [no]: " MQTT_TLS_INPUT
+  MQTT_TLS_INPUT="${MQTT_TLS_INPUT:-no}"
+  # Convert to boolean value (0 or 1, or true/false)
+  if [[ "${MQTT_TLS_INPUT}" =~ ^[yY]([eE][sS])?$|^[tT][rR][uU][eE]$|^1$ ]]; then
+    MQTT_TLS="true"
+  else
+    MQTT_TLS="false"
+  fi
+else
+  # Convert existing value to boolean
+  if [[ "${MQTT_TLS}" =~ ^[yY]([eE][sS])?$|^[tT][rR][uU][eE]$|^1$ ]]; then
+    MQTT_TLS="true"
+  else
+    MQTT_TLS="false"
+  fi
 fi
 
-if [[ -z "${MQTT_CERT:-}" ]]; then
-  read -r -p "Path to MQTT client certificate (MQTT_CERT) [optional]: " MQTT_CERT
-fi
+# Only ask for certificates if TLS is enabled
+if [[ "${MQTT_TLS}" == "true" ]]; then
+  if [[ -z "${MQTT_CA:-}" ]]; then
+    read -r -p "Path to MQTT CA certificate (MQTT_CA) [/etc/ssl/certs/ca-certificates.crt]: " MQTT_CA_INPUT
+    MQTT_CA="${MQTT_CA_INPUT:-/etc/ssl/certs/ca-certificates.crt}"
+  fi
 
-if [[ -z "${MQTT_KEY:-}" ]]; then
-  read -r -p "Path to MQTT client key (MQTT_KEY) [optional]: " MQTT_KEY
+  if [[ -z "${MQTT_CERT:-}" ]]; then
+    read -r -p "Path to MQTT client certificate (MQTT_CERT) [optional]: " MQTT_CERT
+  fi
+
+  if [[ -z "${MQTT_KEY:-}" ]]; then
+    read -r -p "Path to MQTT client key (MQTT_KEY) [optional]: " MQTT_KEY
+  fi
+else
+  # TLS disabled - leave certificate paths empty
+  MQTT_CA=""
+  MQTT_CERT=""
+  MQTT_KEY=""
 fi
 
 echo
@@ -138,7 +165,7 @@ OH_TOKEN=${OH_TOKEN}
 # MQTT configuration
 MQTT_HOST=${MQTT_HOST}
 MQTT_PORT=${MQTT_PORT}
-MQTT_TLS=true
+MQTT_TLS=${MQTT_TLS}
 MQTT_USERNAME=${MQTT_USERNAME}
 MQTT_PASSWORD=${MQTT_PASSWORD}
 MQTT_CA=${MQTT_CA}
