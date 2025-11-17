@@ -23,23 +23,13 @@ COMPOSE_FILE="${REPO_ROOT}/docker-compose.yml"
 
 echo "=== Synergies WSN: Edge Features Deployment ==="
 
-# Check for site ID
+# Check for site ID file
 if [[ ! -f "${ID_FILE}" ]]; then
   echo "Error: ID file not found at ${ID_FILE}."
   echo "Please run the core deployment first:"
   echo "  ./deploy.sh GRC-XXX wsn.uopcloud.net 62832 my_password"
   exit 1
 fi
-
-SITE_ID="$(< "${ID_FILE}")"
-SITE_ID="${SITE_ID%"${SITE_ID##*[![:space:]]}"}"  # Trim trailing whitespace
-SITE_ID="${SITE_ID#"${SITE_ID%%[![:space:]]*}"}"  # Trim leading whitespace
-if [[ -z "${SITE_ID}" ]]; then
-  echo "Error: SITE_ID is empty in ${ID_FILE}."
-  echo "Please ensure the ID file contains a valid site ID."
-  exit 1
-fi
-echo "Detected SITE_ID: ${SITE_ID}"
 
 # Load core config to get defaults
 if [[ ! -f "${CONFIG_ENV_FILE}" ]]; then
@@ -50,6 +40,17 @@ fi
 
 # shellcheck disable=SC1090
 source "${CONFIG_ENV_FILE}"
+
+# Read SITE_ID from ID file AFTER sourcing config.env (so config.env doesn't overwrite it)
+SITE_ID="$(< "${ID_FILE}")"
+SITE_ID="${SITE_ID%"${SITE_ID##*[![:space:]]}"}"  # Trim trailing whitespace
+SITE_ID="${SITE_ID#"${SITE_ID%%[![:space:]]*}"}"  # Trim leading whitespace
+if [[ -z "${SITE_ID}" ]]; then
+  echo "Error: SITE_ID is empty in ${ID_FILE}."
+  echo "Please ensure the ID file contains a valid site ID."
+  exit 1
+fi
+echo "Detected SITE_ID: ${SITE_ID}"
 
 # Determine OpenHAB base URL - use from config.env or construct from hostname/port
 OPENHAB_HTTP_PORT="${OPENHAB_HTTP_PORT:-8080}"
