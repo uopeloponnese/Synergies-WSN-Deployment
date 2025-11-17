@@ -185,9 +185,9 @@ fi
 echo "Starting edge-agent using docker-compose.yml with edge profile..."
 
 if command -v docker-compose >/dev/null 2>&1; then
-  docker-compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d edge-agent
+  docker-compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile core --profile edge up -d edge-agent
 else
-  docker compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d edge-agent
+  docker compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile core --profile edge up -d edge-agent
 fi
 
 echo "Edge-agent started."
@@ -197,9 +197,9 @@ if [[ -n "${EXPORTER_TARGET_URL}" ]]; then
   echo "Starting openhab-exporter using docker-compose.yml with edge profile..."
   
   if command -v docker-compose >/dev/null 2>&1; then
-    docker-compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d openhab-exporter
+    docker-compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile core --profile edge up -d openhab-exporter
   else
-    docker compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d openhab-exporter
+    docker compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile core --profile edge up -d openhab-exporter
   fi
   
   echo "Exporter started."
