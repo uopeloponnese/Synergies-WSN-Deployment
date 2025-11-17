@@ -7,18 +7,19 @@
 #
 # Responsibilities:
 #   - Read the site ID from the ID file created by deploy.sh.
-#   - Source config.env to determine the OpenHAB URL and optional MQTT defaults.
-#   - Prompt the operator for the OpenHAB API token and any missing MQTT settings.
-#   - Generate/update the edge_agent/.env file.
-#   - Start the edge stack via docker-compose.edge.yml.
+#   - Source config.env to determine configuration defaults.
+#   - Prompt the operator for the OpenHAB API token and any missing MQTT/exporter settings.
+#   - Generate/update the edge_agent/.env and openhab_exporter/.env files.
+#   - Start the edge services via docker-compose.yml with edge profile.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-EDGE_ENV_FILE="${REPO_ROOT}/edge_agent/.env"
+EDGE_AGENT_ENV_FILE="${REPO_ROOT}/edge_agent/.env"
+EXPORTER_ENV_FILE="${REPO_ROOT}/openhab_exporter/.env"
 CONFIG_ENV_FILE="${REPO_ROOT}/config.env"
 ID_FILE="${REPO_ROOT}/ID"
-EDGE_COMPOSE_FILE="${REPO_ROOT}/docker-compose.edge.yml"
+COMPOSE_FILE="${REPO_ROOT}/docker-compose.yml"
 
 echo "=== Synergies WSN: Edge Features Deployment ==="
 
@@ -33,38 +34,19 @@ fi
 SITE_ID="$(< "${ID_FILE}")"
 echo "Detected SITE_ID: ${SITE_ID}"
 
-# Load core config to determine OpenHAB host/ports
+# Load core config to get defaults
 if [[ ! -f "${CONFIG_ENV_FILE}" ]]; then
   echo "Error: config.env not found at ${CONFIG_ENV_FILE}."
-  echo "This file is required to determine the OpenHAB URL."
+  echo "This file is required for configuration."
   exit 1
 fi
 
 # shellcheck disable=SC1090
 source "${CONFIG_ENV_FILE}"
 
-OPENHAB_HTTP_PORT="${OPENHAB_HTTP_PORT:-8080}"
-WSN_HOSTNAME="${WSN_HOSTNAME:-wsn.local}"
-OPENHAB_BASE_URL="http://${WSN_HOSTNAME}:${OPENHAB_HTTP_PORT}"
-
-echo "Assuming OpenHAB base URL: ${OPENHAB_BASE_URL}"
 echo
-
-# Basic reachability check (optional, non-fatal)
-if command -v curl >/dev/null 2>&1; then
-  if curl -s --max-time 5 "${OPENHAB_BASE_URL}" >/dev/null; then
-    echo "OpenHAB appears reachable."
-  else
-    echo "Warning: Unable to confirm OpenHAB is reachable at ${OPENHAB_BASE_URL}."
-    echo "Make sure the core stack is up and OpenHAB is running."
-  fi
-else
-  echo "Note: curl not available; skipping OpenHAB reachability check."
-fi
-
-echo
-echo "Now we will collect configuration for the edge agent."
-echo "Values will be stored in ${EDGE_ENV_FILE}."
+echo "Now we will collect configuration for the edge services."
+echo "Values will be stored in ${EDGE_AGENT_ENV_FILE} and ${EXPORTER_ENV_FILE}."
 echo
 
 read -r -p "OpenHAB API token (OH_TOKEN): " OH_TOKEN
@@ -118,13 +100,39 @@ if [[ -z "${MQTT_KEY:-}" ]]; then
 fi
 
 echo
-echo "Writing edge agent environment to ${EDGE_ENV_FILE}..."
+echo "Exporter configuration:"
+echo "You can pre-fill EXPORTER_* values in config.env; any missing values will be requested interactively."
+echo
 
-cat > "${EDGE_ENV_FILE}" <<EOF
+read -r -p "Exporter target URL (EXPORTER_TARGET_URL) [leave empty to skip exporter]: " EXPORTER_TARGET_URL_INPUT
+EXPORTER_TARGET_URL="${EXPORTER_TARGET_URL_INPUT:-${EXPORTER_TARGET_URL:-}}"
+
+if [[ -z "${EXPORTER_TARGET_URL}" ]]; then
+  echo "No exporter target URL provided. Exporter will not be configured."
+  EXPORTER_API_KEY=""
+else
+  if [[ -z "${EXPORTER_API_KEY:-}" ]]; then
+    read -r -p "Exporter API key (EXPORTER_API_KEY) [optional]: " EXPORTER_API_KEY
+  else
+    echo "Using EXPORTER_API_KEY from config.env"
+  fi
+fi
+
+# Set defaults from config.env if not provided
+EXPORTER_INTERVAL_SECONDS="${EXPORTER_INTERVAL_SECONDS:-300}"
+EXPORTER_HTTP_TIMEOUT_SECONDS="${EXPORTER_HTTP_TIMEOUT_SECONDS:-15}"
+EXPORTER_MAX_RETRIES="${EXPORTER_MAX_RETRIES:-3}"
+OPENHAB_HTTP_TIMEOUT_SECONDS="${OPENHAB_HTTP_TIMEOUT_SECONDS:-10}"
+OPENHAB_PERSISTENCE_SERVICE="${OPENHAB_PERSISTENCE_SERVICE:-influxdb}"
+
+echo
+echo "Writing edge agent environment to ${EDGE_AGENT_ENV_FILE}..."
+
+cat > "${EDGE_AGENT_ENV_FILE}" <<EOF
 SITE_ID=${SITE_ID}
 
 # OpenHAB configuration
-OH_BASE_URL=${OPENHAB_BASE_URL}
+OH_BASE_URL=http://oh:8080
 OH_TOKEN=${OH_TOKEN}
 
 # MQTT configuration
@@ -144,52 +152,65 @@ CACHE_TTL_SEC=300
 CACHE_SIZE=1000
 EOF
 
-echo "Environment file created."
+echo "Edge agent environment file created."
+
+echo
+echo "Writing exporter environment to ${EXPORTER_ENV_FILE}..."
+
+cat > "${EXPORTER_ENV_FILE}" <<EOF
+SITE_ID=${SITE_ID}
+
+# OpenHAB configuration
+OPENHAB_BASE_URL=http://oh:8080
+OPENHAB_API_TOKEN=${OH_TOKEN}
+
+# Exporter configuration
+EXPORTER_TARGET_URL=${EXPORTER_TARGET_URL}
+EXPORTER_API_KEY=${EXPORTER_API_KEY}
+EXPORTER_INTERVAL_SECONDS=${EXPORTER_INTERVAL_SECONDS}
+EXPORTER_HTTP_TIMEOUT_SECONDS=${EXPORTER_HTTP_TIMEOUT_SECONDS}
+EXPORTER_MAX_RETRIES=${EXPORTER_MAX_RETRIES}
+OPENHAB_HTTP_TIMEOUT_SECONDS=${OPENHAB_HTTP_TIMEOUT_SECONDS}
+OPENHAB_PERSISTENCE_SERVICE=${OPENHAB_PERSISTENCE_SERVICE}
+EOF
+
+echo "Exporter environment file created."
 echo
 
-if [[ ! -f "${EDGE_COMPOSE_FILE}" ]]; then
-  echo "Error: Edge compose file not found at ${EDGE_COMPOSE_FILE}."
+if [[ ! -f "${COMPOSE_FILE}" ]]; then
+  echo "Error: Docker compose file not found at ${COMPOSE_FILE}."
   exit 1
 fi
 
-echo "Starting edge stack (edge agent) using docker-compose.edge.yml..."
+echo "Starting edge-agent using docker-compose.yml with edge profile..."
 
 if command -v docker-compose >/dev/null 2>&1; then
-  docker-compose -f "${EDGE_COMPOSE_FILE}" up -d
+  docker-compose -f "${COMPOSE_FILE}" --profile edge up -d edge-agent
 else
-  docker compose -f "${EDGE_COMPOSE_FILE}" up -d
+  docker compose -f "${COMPOSE_FILE}" --profile edge up -d edge-agent
 fi
 
+echo "Edge-agent started."
 echo
-echo "Edge agent started."
-echo
-
-read -r -p "Exporter target URL (EXPORTER_TARGET_URL) [leave empty to skip starting exporter]: " EXPORTER_TARGET_URL
 
 if [[ -n "${EXPORTER_TARGET_URL}" ]]; then
-  read -r -p "Exporter API key (EXPORTER_API_KEY) [optional]: " EXPORTER_API_KEY
-
-  echo
-  echo "Starting openhab-exporter container using docker-compose.yml..."
-
+  echo "Starting openhab-exporter using docker-compose.yml with edge profile..."
+  
   if command -v docker-compose >/dev/null 2>&1; then
-    SITE_ID="${SITE_ID}" OPENHAB_API_TOKEN="${OH_TOKEN}" EXPORTER_TARGET_URL="${EXPORTER_TARGET_URL}" EXPORTER_API_KEY="${EXPORTER_API_KEY}" \
-      docker-compose --env-file "${CONFIG_ENV_FILE}" up -d openhab-exporter
+    docker-compose -f "${COMPOSE_FILE}" --profile edge up -d openhab-exporter
   else
-    SITE_ID="${SITE_ID}" OPENHAB_API_TOKEN="${OH_TOKEN}" EXPORTER_TARGET_URL="${EXPORTER_TARGET_URL}" EXPORTER_API_KEY="${EXPORTER_API_KEY}" \
-      docker compose --env-file "${CONFIG_ENV_FILE}" up -d openhab-exporter
+    docker compose -f "${COMPOSE_FILE}" --profile edge up -d openhab-exporter
   fi
-
-  echo
+  
   echo "Exporter started."
 else
-  echo
-  echo "No exporter target URL provided. Skipping exporter startup."
+  echo "Note: Exporter was not configured (no target URL provided)."
+  echo "The exporter .env file was created but the service was not started."
+  echo "To start it later, update ${EXPORTER_ENV_FILE} with EXPORTER_TARGET_URL and run:"
+  echo "  docker compose --profile edge up -d openhab-exporter"
 fi
 
 echo
 echo "Edge features deployment completed."
 echo "You can check running containers with:"
 echo "  docker ps"
-
-

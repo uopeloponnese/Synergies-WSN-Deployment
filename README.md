@@ -68,20 +68,21 @@ This repository includes scripts and configuration files for the automated deplo
    The script will:
 
    - Read the site ID from the `ID` file (created by `deploy.sh`).
-   - Use `config.env` to determine the OpenHAB URL.
+   - Source `config.env` to get existing configuration values.
    - Read MQTT settings (`MQTT_HOST`, `MQTT_PORT`, etc.) from `config.env` when available, and only prompt for any missing values.
    - Prompt you for the OpenHAB API token.
-   - Create/update `edge_agent/.env`.
-   - Start the edge-agent container using `docker-compose.edge.yml`.
-   - Optionally (if you provide an exporter target URL), start the `openhab-exporter` container using `docker-compose.yml`, reusing the same OpenHAB API token.
+   - Prompt for exporter target URL (optional - skip if not needed).
+   - Create/update `edge_agent/.env` with edge-agent configuration.
+   - Create/update `openhab_exporter/.env` with exporter configuration.
+   - Start the edge services using `docker-compose.yml` with the `edge` profile.
 
-5. **Configure the exporter:**
+6. **Configure the exporter (if needed):**
 
-   Open `config.env` and adjust the exporter section. See the [Measurement Exporter](#measurement-exporter) section below for detailed configuration instructions.
+   The `deploy_edge_features.sh` script will prompt for exporter settings. You can also pre-configure them in `config.env` or manually edit the generated `openhab_exporter/.env` file. See the [Measurement Exporter](#measurement-exporter) section below for detailed configuration instructions.
 
    The deployment script stores the provided `site_id` in the `ID` file so that the exporter can reuse it via the shared volume.
 
-6. **Optional – dry run the exporter payload:**
+7. **Optional – dry run the exporter payload:**
 
    ```bash
    python utils/test_exporter_payload.py --openhab-url http://<openhab-host>:8080
@@ -89,6 +90,31 @@ This repository includes scripts and configuration files for the automated deplo
 
    Add `--send --target-url https://example/api` to perform a real POST request using the same logic as the running container.
 
+
+## Docker Compose Profiles
+
+The deployment uses Docker Compose profiles to organize services:
+
+- **`core` profile**: Core services (openhab, influxdb, data-app)
+- **`edge` profile**: Edge services (edge-agent, openhab-exporter)
+
+### Starting Services
+
+You can start services selectively:
+
+```bash
+# Start only core services
+docker compose --profile core up -d
+
+# Start only edge services (requires core to be running)
+docker compose --profile edge up -d
+
+# Start all services
+docker compose --profile core --profile edge up -d
+
+# Start a specific service
+docker compose up -d <service-name>
+```
 
 ## Measurement Exporter
 
@@ -114,18 +140,23 @@ You can run a minimal test setup with:
 
    and re-run `./deploy_edge_features.sh` so the edge agent uses this broker.
 
-2. **Start only the exporter container (core stack + config.env required):**
+2. **Start only the exporter container (core stack required):**
 
    Make sure:
 
    - Core stack (`openhab`, `influxdb`) is running.
-   - `config.env` has `OPENHAB_BASE_URL`, `OPENHAB_API_TOKEN` (or user/password),
-     `EXPORTER_TARGET_URL`, and any other required exporter settings.
+   - `openhab_exporter/.env` file exists with all required settings (created by `deploy_edge_features.sh`).
 
    Then run:
 
    ```bash
-   docker-compose --env-file config.env up -d openhab-exporter
+   docker compose --profile edge up -d openhab-exporter
+   ```
+
+   Or if using the older docker-compose command:
+
+   ```bash
+   docker-compose --profile edge up -d openhab-exporter
    ```
 
 3. **Check logs:**
@@ -183,11 +214,11 @@ The exporter:
 - Reads the `SITE_ID` from the shared `ID` file (falling back to the `SITE_ID` environment variable if necessary)
 - Queries openHAB REST API for all things/channels and resolves the linked items
 - Fetches the latest value for each item and, when configured, the corresponding entry from the selected persistence service (default: `influxdb`)
-- Posts a structured JSON payload to the remote endpoint defined in `config.env`
+- Posts a structured JSON payload to the remote endpoint defined in `openhab_exporter/.env`
 
 ### Configuration
 
-Configure the exporter by editing `config.env`:
+The exporter configuration is stored in `openhab_exporter/.env` (created by `deploy_edge_features.sh`). You can also pre-configure values in `config.env` which the script will use as defaults. The following settings are available:
 
 #### OpenHAB Connection
 
@@ -228,11 +259,25 @@ Choose one authentication method:
 
 ### Starting the Exporter
 
-The exporter is automatically started with docker-compose:
+The exporter can be started in several ways:
 
-```bash
-docker-compose --env-file config.env up -d openhab-exporter
-```
+1. **Using the deployment script** (recommended):
+   ```bash
+   ./deploy_edge_features.sh
+   ```
+   The script will create the `openhab_exporter/.env` file and start the service.
+
+2. **Manually using Docker Compose**:
+   ```bash
+   docker compose --profile edge up -d openhab-exporter
+   ```
+   Requires `openhab_exporter/.env` to exist with all required settings.
+
+3. **Start all edge services**:
+   ```bash
+   docker compose --profile edge up -d
+   ```
+   This starts both edge-agent and openhab-exporter.
 
 ### Monitoring
 

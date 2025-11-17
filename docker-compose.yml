@@ -1,9 +1,11 @@
-version: '3.8'
+version: '3.9'
 
 services:
   openhab:
     image: openhab/openhab:4.1.1
     container_name: openhab
+    profiles:
+      - core
     ports:
       - ${OPENHAB_HTTP_PORT}:${OPENHAB_HTTP_PORT}
       - ${OPENHAB_HTTPS_PORT}:${OPENHAB_HTTPS_PORT}
@@ -44,6 +46,8 @@ services:
   influxdb:
     image: influxdb:1.8
     container_name: influxdb
+    profiles:
+      - core
     restart: always
     volumes:
       - data_influxdb:/var/lib/influxdb
@@ -71,6 +75,8 @@ services:
       context: .
       dockerfile: data_app/Dockerfile
     container_name: app
+    profiles:
+      - core
     restart: always
     ports:
       - 5000:5000
@@ -79,26 +85,42 @@ services:
         aliases:
           - app
 
+  edge-agent:
+    build:
+      context: ./edge_agent
+      dockerfile: Dockerfile
+    image: synergies/openhab-edge-agent:latest
+    container_name: edge-agent
+    profiles:
+      - edge
+    restart: unless-stopped
+    env_file:
+      - ./edge_agent/.env
+    depends_on:
+      - openhab
+    secrets:
+      - mqtt_ca
+      - mqtt_client_crt
+      - mqtt_client_key
+    volumes:
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    networks:
+      wsn-bridge:
+        aliases:
+          - edge-agent
+
   openhab-exporter:
     build:
       context: .
       dockerfile: openhab_exporter/Dockerfile
     container_name: openhab-exporter
+    profiles:
+      - edge
     restart: always
-    environment:
-      OPENHAB_BASE_URL: ${OPENHAB_BASE_URL}
-      OPENHAB_API_TOKEN: ${OPENHAB_API_TOKEN}
-      OPENHAB_USERNAME: ${OPENHAB_USERNAME}
-      OPENHAB_PASSWORD: ${OPENHAB_PASSWORD}
-      EXPORTER_TARGET_URL: ${EXPORTER_TARGET_URL}
-      EXPORTER_API_KEY: ${EXPORTER_API_KEY}
-      EXPORTER_INTERVAL_SECONDS: ${EXPORTER_INTERVAL_SECONDS}
-      EXPORTER_HTTP_TIMEOUT_SECONDS: ${EXPORTER_HTTP_TIMEOUT_SECONDS}
-      EXPORTER_MAX_RETRIES: ${EXPORTER_MAX_RETRIES}
-      SITE_ID: ${SITE_ID}
-      SITE_ID_FILE: /data/site/ID
-      OPENHAB_HTTP_TIMEOUT_SECONDS: ${OPENHAB_HTTP_TIMEOUT_SECONDS}
-      OPENHAB_PERSISTENCE_SERVICE: ${OPENHAB_PERSISTENCE_SERVICE}
+    env_file:
+      - ./openhab_exporter/.env
+    depends_on:
+      - openhab
     volumes:
       - ./ID:/data/site/ID:ro
     networks:
@@ -112,6 +134,14 @@ volumes:
   data_openhab_userdata:
   data_influxdb:
   data_influxdb_config:
+
+secrets:
+  mqtt_ca:
+    file: ./edge_agent/secrets/ca.crt
+  mqtt_client_crt:
+    file: ./edge_agent/secrets/client.crt
+  mqtt_client_key:
+    file: ./edge_agent/secrets/client.key
 
 networks:
   wsn-bridge:
