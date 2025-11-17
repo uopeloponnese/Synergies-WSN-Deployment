@@ -32,6 +32,13 @@ if [[ ! -f "${ID_FILE}" ]]; then
 fi
 
 SITE_ID="$(< "${ID_FILE}")"
+SITE_ID="${SITE_ID%"${SITE_ID##*[![:space:]]}"}"  # Trim trailing whitespace
+SITE_ID="${SITE_ID#"${SITE_ID%%[![:space:]]*}"}"  # Trim leading whitespace
+if [[ -z "${SITE_ID}" ]]; then
+  echo "Error: SITE_ID is empty in ${ID_FILE}."
+  echo "Please ensure the ID file contains a valid site ID."
+  exit 1
+fi
 echo "Detected SITE_ID: ${SITE_ID}"
 
 # Load core config to get defaults
@@ -43,6 +50,21 @@ fi
 
 # shellcheck disable=SC1090
 source "${CONFIG_ENV_FILE}"
+
+# Determine OpenHAB base URL - use from config.env or construct from hostname/port
+OPENHAB_HTTP_PORT="${OPENHAB_HTTP_PORT:-8080}"
+if [[ -n "${OPENHAB_BASE_URL:-}" ]]; then
+  # Use OPENHAB_BASE_URL from config.env if set
+  OH_BASE_URL="${OPENHAB_BASE_URL}"
+else
+  # Construct from hostname or use container name as fallback
+  if [[ -n "${WSN_HOSTNAME:-}" ]]; then
+    OH_BASE_URL="http://${WSN_HOSTNAME}:${OPENHAB_HTTP_PORT}"
+  else
+    # Default to container name (works on Docker network)
+    OH_BASE_URL="http://openhab:${OPENHAB_HTTP_PORT}"
+  fi
+fi
 
 echo
 echo "Now we will collect configuration for the edge services."
@@ -159,7 +181,7 @@ cat > "${EDGE_AGENT_ENV_FILE}" <<EOF
 SITE_ID=${SITE_ID}
 
 # OpenHAB configuration
-OH_BASE_URL=http://oh:8080
+OH_BASE_URL=${OH_BASE_URL}
 OH_TOKEN=${OH_TOKEN}
 
 # MQTT configuration
@@ -188,7 +210,7 @@ cat > "${EXPORTER_ENV_FILE}" <<EOF
 SITE_ID=${SITE_ID}
 
 # OpenHAB configuration
-OPENHAB_BASE_URL=http://oh:8080
+OPENHAB_BASE_URL=${OH_BASE_URL}
 OPENHAB_API_TOKEN=${OH_TOKEN}
 
 # Exporter configuration
