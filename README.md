@@ -120,60 +120,142 @@ docker compose up -d <service-name>
 
 The `openhab-exporter` container is part of `docker-compose.yml` and runs alongside openHAB and InfluxDB. It periodically collects the latest state for all items grouped by thing/channel and forwards the payload to a remote HTTP endpoint.
 
-### Quick Test Containers (MQTT + Exporter)
+### Running Only Edge Services (Testing Setup)
 
-You can run a minimal test setup with:
+This guide explains how to set up and run only the edge services (edge-agent and exporter) for testing, assuming the core stack is already running.
 
-1. **Start a test MQTT broker (for edge-agent tests):**
+#### Prerequisites
 
-   ```bash
-   docker run -d --name test-mqtt -p 1883:1883 eclipse-mosquitto
-   ```
+- Core stack (`openhab`, `influxdb`) must be running
+- You have an OpenHAB API token ready
+- You're in the repository root directory
 
-   Then set in `config.env`:
+#### Step-by-Step Setup
 
-   ```env
-   MQTT_HOST="127.0.0.1"
-   MQTT_PORT=1883
-   MQTT_TLS=false
-   ```
-
-   and re-run `./deploy_edge_features.sh` so the edge agent uses this broker.
-
-2. **Start only the exporter container (core stack required):**
-
-   Make sure:
-
-   - Core stack (`openhab`, `influxdb`) is running.
-   - `openhab_exporter/.env` file exists with all required settings (created by `deploy_edge_features.sh`).
-
-   Then run:
+1. **Clean up any existing edge/test containers:**
 
    ```bash
-   docker compose --profile edge up -d openhab-exporter
+   # Stop and remove edge services and test containers in one go
+   docker stop edge-agent openhab-exporter exporter-target test-mqtt 2>/dev/null || true
+   docker rm edge-agent openhab-exporter exporter-target test-mqtt 2>/dev/null || true
    ```
 
-   Or if using the older docker-compose command:
+   This ensures a clean start and prevents port conflicts.
+
+2. **Start a test MQTT broker (configured to accept connections from containers):**
 
    ```bash
-   docker-compose --profile edge up -d openhab-exporter
+   # Create mosquitto configuration file that allows network connections
+   printf "listener 1883 0.0.0.0\nallow_anonymous true\n#socket_domain ipv4\n" > mosquitto.conf
+   
+   # Remove any existing test-mqtt container and start a new one
+   # Note: Replace 'synergies-wsn-deployment_wsn-bridge' with your actual network name if different
+   # Find it with: docker network ls | grep wsn-bridge
+   docker rm -f test-mqtt 2>/dev/null || true
+   docker run -d --name test-mqtt \
+     --network synergies-wsn-deployment_wsn-bridge \
+     -p 1883:1883 \
+     -v "$PWD/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro" \
+     eclipse-mosquitto
    ```
 
-3. **Check logs:**
+   **Explanation:**
+   - Creates a mosquitto config file that listens on all interfaces (`0.0.0.0`) and allows anonymous connections
+   - Connects the broker to the same Docker network as your services (`wsn-bridge`)
+   - Maps port 1883 to the host for external access
+   - **To find your network name:** Run `docker network ls | grep wsn-bridge` and use the network name shown
+
+3. **Start a test HTTP server to receive exporter payloads:**
 
    ```bash
-   docker logs -f test-mqtt
+   docker run -d --name exporter-target -p 8081:8080 mendhak/http-https-echo
+   ```
+
+   **Explanation:**
+   - Uses a pre-built image that echoes all HTTP requests (GET, POST, etc.)
+   - Maps container port 8080 to host port 8081
+   - Useful for testing - you can see all POST requests in the container logs
+
+4. **Make the deployment script executable and run it:**
+
+   ```bash
+   chmod +x deploy_edge_features.sh
+   ./deploy_edge_features.sh
+   ```
+
+   **During the script execution, you'll be prompted for:**
+
+   - **OpenHAB API token**: Enter the token you created in OpenHAB
+   - **MQTT broker host**: 
+     - If the MQTT broker is on the same host: Use your host's IP address (e.g., `192.168.88.191`)
+     - If using the test-mqtt container on the same network: Use `test-mqtt`
+   - **MQTT broker port**: `1883` (default)
+   - **Enable MQTT TLS**: Press Enter for "no" (default) when testing
+   - **Exporter target URL**: 
+     - If the exporter-target container is on the same host: Use `http://<host_ip>:8081` (e.g., `http://192.168.88.191:8081`)
+     - If on the same Docker network: Use `http://exporter-target:8080`
+
+   **Note:** The script reads `SITE_ID` from the `ID` file and `OPENHAB_BASE_URL` from `config.env`, so make sure these are set correctly.
+
+5. **Verify the services are running:**
+
+   ```bash
+   docker ps | grep -E "(edge-agent|openhab-exporter|test-mqtt|exporter-target)"
+   ```
+
+#### Testing the Edge Services
+
+1. **Monitor MQTT traffic (optional):**
+
+   ```bash
+   # Subscribe to all MQTT topics to see edge-agent activity
+   mosquitto_sub -h localhost -p 1883 -t "#" -v
+   ```
+
+   You should see messages on topics like:
+   - `wsn/<SITE_ID>/openhab/status` - Heartbeat messages
+   - `wsn/<SITE_ID>/openhab/data` - Telemetry data
+   - `wsn/<SITE_ID>/openhab/response` - Responses to commands
+
+2. **Test the edge-agent via MQTT:**
+
+   ```bash
+   # Fetch the full list of items from OpenHAB
+   python3 utils/test_mqtt_openhab.py --list-items
+
+   # Fetch the state of a specific item
+   python3 utils/test_mqtt_openhab.py --item GRC00001MS009_Sensor_temperature
+   ```
+
+   **Note:** Replace `GRC00001MS009_Sensor_temperature` with an actual item name from your OpenHAB setup.
+
+3. **Check exporter logs:**
+
+   ```bash
+   # View exporter logs to see if it's successfully posting data
    docker logs -f openhab-exporter
    ```
 
-4. **Stop and remove the test containers:**
+4. **Check exporter target logs (for testing):**
 
    ```bash
-   docker stop openhab-exporter test-mqtt
-   docker rm openhab-exporter test-mqtt
+   # View the HTTP echo server logs to see received POST requests
+   docker logs -f exporter-target
    ```
 
-   This leaves your core stack running.
+   You should see the JSON payloads being posted by the exporter, including request headers, body, and response codes.
+
+#### Cleanup
+
+To stop and remove all edge and test containers:
+
+```bash
+docker stop edge-agent openhab-exporter exporter-target test-mqtt
+docker rm edge-agent openhab-exporter exporter-target test-mqtt
+rm -f mosquitto.conf
+```
+
+This leaves your core stack running.
 
 ### Python MQTT/OpenHAB Test Script
 
@@ -223,8 +305,9 @@ The exporter configuration is stored in `openhab_exporter/.env` (created by `dep
 #### OpenHAB Connection
 
 - **`OPENHAB_BASE_URL`** – Base URL for the openHAB REST API
-  - For local docker: `http://oh:8080`
+  - For containers on the same Docker network: `http://openhab:8080` (uses container name)
   - For remote: `http://remote-host:8080` or `https://remote-host:8443`
+  - This value is read from `config.env` by the deployment script
 
 #### OpenHAB Authentication
 
