@@ -10,8 +10,12 @@ Usage examples (from the repo root):
     # Fetch the full /rest/items list
     python utils/test_mqtt_openhab.py --list-items
 
+    # Override site ID from command line
+    python utils/test_mqtt_openhab.py --item YourItemName --site-id custom-site-id
+
 The script will:
   - Read SITE_ID from the ID file (or SITE_ID in config.env as a fallback)
+    - Or use --site-id command-line argument if provided (takes precedence)
   - Read MQTT_HOST / MQTT_PORT from config.env
   - Publish a GET command for /rest/items/<item>/state
   - Wait for the edge agent's response and print it
@@ -100,6 +104,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=10,
         help="Seconds to wait for MQTT response (default: 10).",
     )
+    parser.add_argument(
+        "--site-id",
+        type=str,
+        help="Site ID to use (overrides ID file and config.env).",
+    )
     return parser
 
 
@@ -110,7 +119,8 @@ def main() -> None:
     if not args.list_items and not args.item:
         raise SystemExit("You must provide either --item <name> or --list-items.")
 
-    site_id = resolve_site_id()
+    # Use command-line site-id if provided, otherwise resolve from files
+    site_id = args.site_id if args.site_id else resolve_site_id()
     mqtt_host, mqtt_port = resolve_mqtt_config()
     command_topic = f"wsn/{site_id}/openhab/command"
     response_topic = f"wsn/{site_id}/openhab/response"
