@@ -28,6 +28,7 @@ nobind
 tun-mtu 1500
 auth sha256
 cipher AES-256-CBC
+data-ciphers AES-256-CBC
 auth-nocache
 resolv-retry infinite
 verb 3
