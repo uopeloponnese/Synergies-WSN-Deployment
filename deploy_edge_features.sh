@@ -234,10 +234,25 @@ fi
 
 echo "Starting edge-agent using docker-compose.yml with edge profile..."
 
+# Try to find docker-compose in common locations or PATH
+COMPOSE_BIN=""
 if command -v docker-compose >/dev/null 2>&1; then
-  docker-compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d --no-deps edge-agent
+  COMPOSE_BIN="docker-compose"
+elif [[ -f "${REPO_ROOT}/pythonvenv/bin/docker-compose" ]]; then
+  COMPOSE_BIN="${REPO_ROOT}/pythonvenv/bin/docker-compose"
+elif command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+  COMPOSE_BIN="docker compose"
 else
+  echo "Error: Could not find docker-compose or 'docker compose' command."
+  echo "Please ensure docker-compose is installed and available in PATH,"
+  echo "or update this script to point to your docker-compose location."
+  exit 1
+fi
+
+if [[ "${COMPOSE_BIN}" == "docker compose" ]]; then
   docker compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d --no-deps edge-agent
+else
+  "${COMPOSE_BIN}" -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d --no-deps edge-agent
 fi
 
 echo "Edge-agent started."
@@ -246,10 +261,10 @@ echo
 if [[ -n "${EXPORTER_TARGET_URL}" ]]; then
   echo "Starting openhab-exporter using docker-compose.yml with edge profile..."
   
-  if command -v docker-compose >/dev/null 2>&1; then
-    docker-compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d --no-deps openhab-exporter
-  else
+  if [[ "${COMPOSE_BIN}" == "docker compose" ]]; then
     docker compose -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d --no-deps openhab-exporter
+  else
+    "${COMPOSE_BIN}" -f "${COMPOSE_FILE}" --env-file "${CONFIG_ENV_FILE}" --profile edge up -d --no-deps openhab-exporter
   fi
   
   echo "Exporter started."
