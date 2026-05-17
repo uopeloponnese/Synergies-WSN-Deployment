@@ -52,7 +52,7 @@ This repository includes scripts and configuration files for the automated deplo
    ```bash
    ./deploy.sh GRC-XXX wsn.uopcloud.net 62832 my_password
    ```
-   *[NOTE: The site ID (GRC-XXX) and the VPN password will be provided by the UoP WSN Technical Consultant upon request]*
+   *[NOTE: The site ID (GRC-XXX), VPN password, and OpenVPN files (`ca.crt`, `client.crt`, `client.key` in `utils/openvpn/`) will be provided by the UoP WSN Technical Consultant upon request]*
 
 5. **(Optional) Deploy edge features (edge agent + exporter):**
 

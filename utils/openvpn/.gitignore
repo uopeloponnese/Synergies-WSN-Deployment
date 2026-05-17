@@ -1,0 +1,6 @@
+# VPN credentials — obtain from UoP WSN Technical Consultant; never commit
+ca.crt
+client.crt
+client.key
+*.pem
+*.key
